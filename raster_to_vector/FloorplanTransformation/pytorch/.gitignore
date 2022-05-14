@@ -1,0 +1,7 @@
+venv
+__pycache__
+output-*
+.vscode
+test/
+**/*.pth*
+checkpoint/

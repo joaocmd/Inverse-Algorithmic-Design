@@ -1,0 +1,9 @@
+**/__pycache__/
+.vscode/
+icons/
+annatator/
+popup/
+rendering/
+code/
+util/lua/
+util/mat/
