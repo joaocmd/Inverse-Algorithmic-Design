@@ -5,7 +5,7 @@ import numpy as np
 import sys
 import csv
 import copy
-from utils import *
+from .utils import *
 from skimage import measure
 
 GAPS = {'wall_extraction': 5, 'door_extraction': 5, 'icon_extraction': 5, 'wall_neighbor': 5, 'door_neighbor': 5, 'icon_neighbor': 5, 'wall_conflict': 5, 'door_conflict': 5, 'icon_conflict': 5, 'wall_icon_neighbor': 5, 'wall_icon_conflict': 5, 'wall_door_neighbor': 5, 'door_point_conflict': 5}
@@ -1169,7 +1169,7 @@ def sortLines(points, lines):
 
 ## Reconstruct a floorplan via IP optimization
 def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatmaps, iconHeatmaps, roomHeatmaps, output_prefix='test/', densityImage=None, gt_dict=None, gt=False, gap=-1, distanceThreshold=-1, lengthThreshold=-1, debug_prefix='test', heatmapValueThresholdWall=None, heatmapValueThresholdDoor=None, heatmapValueThresholdIcon=None, enableAugmentation=False):
-  print('reconstruct')
+  # print('reconstruct')
 
   wallPoints = []
   iconPoints = []
@@ -1216,8 +1216,8 @@ def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatm
   sortLines(doorPoints, doorLines)
   sortLines(wallPoints, wallLines)
 
-  print('the number of points', len(wallPoints), len(doorPoints), len(iconPoints))
-  print('the number of lines', len(wallLines), len(doorLines), len(iconLines))
+  # print('the number of points', len(wallPoints), len(doorPoints), len(iconPoints))
+  # print('the number of lines', len(wallLines), len(doorLines), len(iconLines))
 
 
   drawPoints(os.path.join(debug_prefix, "points.png"), width, height, wallPoints, densityImage, pointSize=3)
@@ -1253,9 +1253,9 @@ def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatm
     drawLines(os.path.join(debug_prefix, 'lines.png'), width, height, wallPoints, wallLines, [], None, 2, lineColor=255)
     drawLines(os.path.join(debug_prefix, 'doors.png'), width, height, doorPoints, doorLines, [], None, 2, lineColor=255)
     drawRectangles(os.path.join(debug_prefix, 'icons.png'), width, height, iconPoints, icons, {}, 2)
-    print('number of walls: ' + str(len(wallLines)))
-    print('number of doors: ' + str(len(doorLines)))
-    print('number of icons: ' + str(len(icons)))
+    # print('number of walls: ' + str(len(wallLines)))
+    # print('number of doors: ' + str(len(doorLines)))
+    # print('number of icons: ' + str(len(icons)))
     pass
 
 
@@ -1591,9 +1591,9 @@ def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatm
       iconArea = (x_2 - x_1 + 1) * (y_2 - y_1 + 1)
 
       if iconArea <= 1e-4:
-        print(icon)
-        print([iconPoints[pointIndex] for pointIndex in icon])
-        print('zero size icon')
+        # print(icon)
+        # print([iconPoints[pointIndex] for pointIndex in icon])
+        # print('zero size icon')
         exit(1)
         pass
 
@@ -1682,10 +1682,10 @@ def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatm
       pass
 
     model += obj
-    model.solve()
+    model.solve(PULP_CBC_CMD(msg=0))
 
     #model.writeLP(debug_prefix + '/model.lp')
-    print('Optimization information', LpStatus[model.status], value(model.objective))
+    # print('Optimization information', LpStatus[model.status], value(model.objective))
 
     if LpStatus[model.status] == 'Optimal':
       filteredWallLines = []
@@ -1710,7 +1710,7 @@ def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatm
           continue
 
         filteredWallLabels.append(labels)
-        print('wall', lineIndex, labels, [np.array(wallPoints[pointIndex][:2]).astype(np.int32).tolist() for pointIndex in wallLines[lineIndex]], wallLineNeighbors[lineIndex][0].keys(), wallLineNeighbors[lineIndex][1].keys())
+        # print('wall', lineIndex, labels, [np.array(wallPoints[pointIndex][:2]).astype(np.int32).tolist() for pointIndex in wallLines[lineIndex]], wallLineNeighbors[lineIndex][0].keys(), wallLineNeighbors[lineIndex][1].keys())
         line = wallLines[lineIndex]
         lineDim = calcLineDim(wallPoints, line)
         if lineDim == 0:
@@ -1743,7 +1743,7 @@ def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatm
       for lineIndex, lineVar in enumerate(d_l):
         if lineVar.varValue < 0.5:
           continue
-        print(('door', lineIndex, [doorPoints[pointIndex][:2] for pointIndex in doorLines[lineIndex]]))
+        # print(('door', lineIndex, [doorPoints[pointIndex][:2] for pointIndex in doorLines[lineIndex]]))
         filteredDoorLines.append(doorLines[lineIndex])
 
         filteredDoorTypes.append(0)
@@ -1767,7 +1767,7 @@ def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatm
             break
           continue
 
-        print(('icon', iconIndex, iconType, [iconPoints[pointIndex][:2] for pointIndex in icons[iconIndex]]))
+        # print(('icon', iconIndex, iconType, [iconPoints[pointIndex][:2] for pointIndex in icons[iconIndex]]))
 
         filteredIconTypes.append(iconType)
         continue
@@ -1806,14 +1806,14 @@ def reconstructFloorplan(wallCornerHeatmaps, doorCornerHeatmaps, iconCornerHeatm
         #print((pointIndex, orientationLines))
 
         if len(orientations) < len(wallPointOrientationLinesMap[pointIndex]):
-          print('invalid point', pointIndex, orientations, wallPointOrientationLinesMap[pointIndex])
-          print(wallPoints[pointIndex])
+          # print('invalid point', pointIndex, orientations, wallPointOrientationLinesMap[pointIndex])
+          # print(wallPoints[pointIndex])
           wallPoints[pointIndex][2] = len(orientations) - 1
           orientations = tuple(orientations)
           if orientations not in orientationMap:
             continue
           wallPoints[pointIndex][3] = orientationMap[orientations]
-          print(wallPoints[pointIndex])
+          # print(wallPoints[pointIndex])
           exit(1)
           pass
 

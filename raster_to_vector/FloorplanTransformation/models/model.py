@@ -1,6 +1,7 @@
-from models.drn import drn_d_54
+from .drn import drn_d_54
 from torch import nn
-from models.modules import *
+from .modules import *
+from ..utils import *
 
 class Model(nn.Module):
     def __init__(self, options):

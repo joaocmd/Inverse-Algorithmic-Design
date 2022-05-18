@@ -2,28 +2,28 @@ import torch
 import cv2
 import numpy as np
 
-from utils import NUM_WALL_CORNERS
-from options import parse_args
-from models.model import Model
-from IP import reconstructFloorplan
+from .utils import NUM_WALL_CORNERS
+from .options import parse_args
+from .models.model import Model
+from .IP import reconstructFloorplan
 import matplotlib.pyplot as plt
 import sys
 
 def load_image(img_path):
-    image = cv2.imread(img_path, 0)
-    # image = imutils.resize(image, 256, 256)
-    height, width = image.shape
-    print(image.shape)
+    # image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    # height, width = image.shape
+    image = cv2.imread(img_path)
+    height, width, _ = image.shape
     diff = height-width
     if diff > 0:
         image = cv2.copyMakeBorder(image, 0, 0, diff//2, diff//2, borderType=cv2.BORDER_CONSTANT, value=[255, 255, 255])
     elif diff < 0:
         image = cv2.copyMakeBorder(image, -diff//2, -diff//2, 0, 0, borderType=cv2.BORDER_CONSTANT, value=[255, 255, 255])
     image = cv2.resize(image, (256, 256), interpolation=cv2.INTER_AREA)
-    image = np.stack((image,) * 3, axis=-1)
+    # image = np.stack((image,) * 3, axis=-1)
     image = (image.astype(np.float32) / 255 - 0.5).transpose((2, 0, 1))
     image = image[np.newaxis, ...]
-    np_print({'image': image})
+    # np_print({'image': image})
     return image
 
 
@@ -68,7 +68,7 @@ from pathlib import Path
 def main(img_path, show_heatmaps=True):
     options = parse_args()
     model = Model(options)
-    checkpoint_path = str(Path(__file__).parent.absolute()) + '/checkpoint.pth'
+    checkpoint_path = str(Path(__file__).parent.absolute() / 'checkpoint.pth')
     model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cpu')))
 
     corner_pred, icon_pred, room_pred = model(torch.tensor(load_image(img_path)))
@@ -93,7 +93,7 @@ def main(img_path, show_heatmaps=True):
         'doorCornerHeatmaps': doorCornerHeatmaps.max(-1),
         'iconCornerHeatmaps': iconCornerHeatmaps.max(-1),
     }
-    np_print(maps)
+    # np_print(maps)
     if show_heatmaps:
         plot_images(maps)
 
@@ -105,4 +105,5 @@ def main(img_path, show_heatmaps=True):
                          heatmapValueThresholdDoor=None, heatmapValueThresholdIcon=None,
                          enableAugmentation=True)
 
-main('image.jpg', False)
+# print(main(str(Path(__file__).parent.absolute() / '../../r2v-image.jpg'), False))
+# main('image.jpg', False)

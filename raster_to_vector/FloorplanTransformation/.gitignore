@@ -1,9 +1,7 @@
-**/__pycache__/
-.vscode/
-icons/
-annatator/
-popup/
-rendering/
-code/
-util/lua/
-util/mat/
+venv
+__pycache__
+output-*
+.vscode
+test/
+**/*.pth*
+checkpoint/
