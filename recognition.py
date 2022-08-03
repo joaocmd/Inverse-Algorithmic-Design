@@ -2,11 +2,8 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-from residential.room_contour_simplification import simplify_contours
-from residential.wall_simplification import contours_to_walls
 from door_classification.door_classification import classify_door
-from segmentation import predict
-from utils.wall_width_calculation import calculate_width
+from toilet_classification import classify_toilet
 from utils.cluster_points import normalize_wall_points
 from utils.geometry import *
 
@@ -47,7 +44,7 @@ def element_segment(s):
 
     return segment(c - normal*half_width, c + normal*half_width)
 
-def attach_openings(walls, elements, verbose):
+def attach_openings(walls, elements, verbose=False):
     '''
         Changes walls destructively.
     '''
@@ -72,32 +69,54 @@ def attach_openings(walls, elements, verbose):
 
     return walls
 
+def putText(img, text, pos, size=1):
+    img = cv2.putText(
+        img, text, pos,
+        cv2.FONT_HERSHEY_SIMPLEX, size, (0, 0, 0), thickness=4, lineType=cv2.LINE_AA
+    )
+    img = cv2.putText(
+        img, text, pos,
+        cv2.FONT_HERSHEY_SIMPLEX, size, (255, 255, 255), thickness=2, lineType=cv2.LINE_AA
+        # cv2.FONT_HERSHEY_SIMPLEX, 1, (102, 255, 102), thickness=2, lineType=cv2.LINE_AA
+    )
+    return img
+
 def show_results(image, results, output_name):
-    reconstr = np.copy(image) #np.full(image.shape, 255).astype(np.uint8)
+    reconstr = np.copy(image)
+    # reconstr = np.full(image.shape, 255).astype(np.uint8)
     for wall in results['walls']:
         s, e = wall['points']
-        reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (0, 0, 0), 3)
-        reconstr = cv2.circle(reconstr, np.intp(s), 3, (0, 255, 0), 3)
-        reconstr = cv2.circle(reconstr, np.intp(e), 3, (0, 255, 0), 3)
+        reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (66, 67, 66), 3)
+        reconstr = cv2.circle(reconstr, np.intp(s), 3, (91, 93, 91), 3)
+        reconstr = cv2.circle(reconstr, np.intp(e), 3, (91, 93, 91), 3)
 
-        if 'elements'  in wall:
+    for wall in results['walls']:
+        if 'elements' in wall:
             for el in wall['elements']:
                 s, e = el['points']
                 if el['type'] == 'window':
-                    reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (147, 181, 198), 3)
+                    reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (57, 160, 237), 3)
                 else:
-                    reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (94, 80, 63), 3)
-                    reconstr = cv2.putText(
-                        reconstr, el['type'][-2:],
-                        np.intp(s),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (230, 80, 63), 3, 2
-                    )
+                    reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (229, 178, 93), 3)
 
     icons = ('closet', 'toilet', 'sink', 'bathtub')
-    colors = ((145, 91, 36), (133, 218, 255),  (58, 126, 156), (201, 30, 173))
+    colors = ((158, 107, 26), (133, 218, 255),  (58, 126, 156), (201, 30, 173))
     for icon in results['icons']:
         reconstr = cv2.drawContours(reconstr, [np.intp(icon['points'])], 0, colors[icons.index(icon['type'])], 3)
 
+    for wall in results['walls']:
+        if 'elements' in wall:
+            for el in wall['elements']:
+                if el['type'] == 'door':
+                    centroid = np.intp(np.mean(el['points'], axis=0))
+                    reconstr = putText(reconstr, el['orientation'][-2:], centroid, 1)
+
+    for icon in results['icons']:
+        if icon['type'] == 'toilet':
+            centroid = np.intp(np.mean(icon['points'], axis=0))
+            reconstr = putText(reconstr, str(icon['orientation']), centroid, 0.5)
+
+    reconstr = cv2.cvtColor(reconstr, cv2.COLOR_RGB2BGR)
     cv2.imwrite(output_name, reconstr)
 
 def main(path, method, verbose=True):
@@ -116,10 +135,13 @@ def main(path, method, verbose=True):
     elif method == 'brute_force':
         from brute_force import recognize
         prediction = recognize(original, verbose)
+    elif method == 'r2v':
+        from raster_to_vector import recognize
+        prediction = recognize(path, verbose)
 
     walls, doors, windows = prediction['walls'], prediction['doors'], prediction['windows']
     walls = attach_openings(walls, doors + windows, verbose)
-    walls = normalize_wall_points(walls, 5)
+    walls = normalize_wall_points(walls, 5) # attach first because this might move walls slightly
 
     # this step can be merged with attach, probably not relevant
     logger.info('Classifying doors individually')
@@ -127,7 +149,13 @@ def main(path, method, verbose=True):
         if 'elements' in wall:
             for element in wall['elements']:
                 if element['type'] == 'door':
-                    element['type'] = classify_door(element, wall, original)
+                    element['orientation'] = classify_door(element, wall, original)
+
+    # predicting toilet rotation
+    logger.info('Classifying toilets individually')
+    for icon in tqdm(prediction['icons'], disable=not verbose):
+        if icon['type'] == 'toilet':
+            icon['orientation'] = classify_toilet(icon, original)
 
     logger.info('Finished')
     res = {'walls': walls, 'icons': prediction['icons']}
@@ -142,3 +170,4 @@ def main(path, method, verbose=True):
 if __name__ == '__main__':
     # print(main('original.png', 'residential'))
     print(main('original.png', 'brute_force'))
+    # print(main('r2v-image-rotated.jpg', 'r2v'))

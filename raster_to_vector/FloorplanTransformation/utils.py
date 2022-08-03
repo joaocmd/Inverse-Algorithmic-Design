@@ -208,7 +208,7 @@ def drawPoints(filename, width, height, points, backgroundImage=None, pointSize=
     continue
 
   if filename != '':
-    cv2.imwrite(filename, image)
+    # cv2.imwrite(filename, image)
     return
   else:
     return image
@@ -224,7 +224,7 @@ def drawPointsSeparately(path, width, height, points, backgroundImage=None, poin
     image[max(int(round(point[1])) - pointSize, 0):min(int(round(point[1])) + pointSize, height), max(int(round(point[0])) - pointSize, 0):min(int(round(point[0])) + pointSize, width), int(point[2] * 4 + point[3])] = 255
     continue
   for channel in range(13):
-    cv2.imwrite(path + '_' + str(channel) + '.png', image[:, :, channel])
+    # cv2.imwrite(path + '_' + str(channel) + '.png', image[:, :, channel])
     continue
   return
 
@@ -298,7 +298,8 @@ def drawLines(filename, width, height, points, lines, lineLabels = [], backgroun
   if filename == '':
     return image
   else:
-    cv2.imwrite(filename, image)
+    # cv2.imwrite(filename, image)
+    return
 
 
 def drawRectangles(filename, width, height, points, rectangles, labels, lineWidth = 2, backgroundImage = None, rectangleColor = None):
@@ -336,8 +337,8 @@ def drawRectangles(filename, width, height, points, rectangles, labels, lineWidt
   if filename == '':
     return image
   else:
-    cv2.imwrite(filename, image)
-    pass
+    # cv2.imwrite(filename, image)
+    return
 
 def pointDistance(point_1, point_2):
     #return np.sqrt(pow(point_1[0] - point_2[0], 2) + pow(point_1[1] - point_2[1], 2))
