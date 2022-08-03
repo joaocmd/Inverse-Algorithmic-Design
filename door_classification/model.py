@@ -9,18 +9,17 @@ import numpy as np
 __all__ = ['Model']
 
 classes = (
-    'slide', 'none',
+    'slide', 'rollup', 'none',
     'double_d', 'double_u',
     'opposite_ul_dl', 'opposite_ul_dr', 'opposite_ur_dl', 'opposite_ur_dr',
     'single_dl', 'single_dr', 'single_ul', 'single_ur',
 )
-classes_to_ignore = ('RollUp', )
 
 class_map = {
     'Door Fold Beside': classes.index('slide'),
     'Door None Beside': classes.index('none'),
     'Door ParallelSlide Beside': classes.index('slide'),
-    'Door RollUp Beside': -1, 
+    'Door RollUp Beside': classes.index('rollup'),
     'Door Slide Beside': classes.index('slide'),
     'Door Zfold Beside': classes.index('slide'),
     'Double_d': classes.index('double_d'),
@@ -50,14 +49,12 @@ def resize(image):
 class Net(Module):
     def __init__(self):
         super().__init__()
-        self.n_classes = len(classes)
-        self.backbone = convnext_tiny(pretrained=False)
-        self.fc1 = Linear(1000, self.n_classes)
+        self.net = convnext_tiny(weights=None)
+        in_features = self.net.classifier[2].in_features
+        self.net.classifier[2] = Linear(in_features, len(classes))
 
     def forward(self, x):
-        x = self.backbone(x).flatten(1)
-        x = self.fc1(x)
-        return x
+        return self.net(x)
 
 # Singleton wrapper for Net
 class Model(Net):
