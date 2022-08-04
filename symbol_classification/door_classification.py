@@ -6,6 +6,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from utils.geometry import perpendicular, normalized, vector, center
 
 from .model import Model
+from .utils import checkpoint_path
 
 def get_wall_direction(wall, p):
     '''
@@ -40,5 +41,13 @@ def classify_door(door, wall, original_img):
         wall: the corresponding wall
         original_img: original image pixels
     '''
+    classes = (
+        'slide', 'rollup', 'none',
+        'double_d', 'double_u',
+        'opposite_ul_dl', 'opposite_ul_dr', 'opposite_ur_dl', 'opposite_ur_dr',
+        'single_dl', 'single_dr', 'single_ul', 'single_ur',
+    )
+
+    model = Model.get(checkpoint_path/'doors.pth', 100, classes)
     cropped_door = crop_door(door, wall, original_img)
-    return Model.predict(cropped_door)
+    return model.predict(cropped_door)

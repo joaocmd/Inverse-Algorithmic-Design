@@ -2,8 +2,7 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-from door_classification.door_classification import classify_door
-from toilet_classification import classify_toilet
+from symbol_classification import classify_door, classify_toilet, classify_sink
 from utils.cluster_points import normalize_wall_points
 from utils.geometry import *
 
@@ -112,7 +111,7 @@ def show_results(image, results, output_name):
                     reconstr = putText(reconstr, el['orientation'][-2:], centroid, 1)
 
     for icon in results['icons']:
-        if icon['type'] == 'toilet':
+        if icon['type'] in ('toilet', 'sink'):
             centroid = np.intp(np.mean(icon['points'], axis=0))
             reconstr = putText(reconstr, str(icon['orientation']), centroid, 0.5)
 
@@ -156,6 +155,8 @@ def main(path, method, verbose=True):
     for icon in tqdm(prediction['icons'], disable=not verbose):
         if icon['type'] == 'toilet':
             icon['orientation'] = classify_toilet(icon, original)
+        if icon['type'] == 'sink':
+            icon['orientation'] = classify_sink(icon, original)
 
     logger.info('Finished')
     res = {'walls': walls, 'icons': prediction['icons']}
