@@ -1,0 +1,4 @@
+[deps]
+Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
+KhepriBase = "4cc0fe96-1163-46f3-ba32-de1e65d9548f"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
