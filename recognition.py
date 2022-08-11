@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 from symbol_classification import classify_door, classify_toilet, classify_sink
+from wall_width import get_wall_width
 from utils.cluster_points import normalize_wall_points
 from utils.geometry import *
 
@@ -68,7 +69,7 @@ def attach_openings(walls, elements, verbose=False):
 
     return walls
 
-def putText(img, text, pos, size=1):
+def put_text(img, text, pos, size=1):
     img = cv2.putText(
         img, text, pos,
         cv2.FONT_HERSHEY_SIMPLEX, size, (0, 0, 0), thickness=4, lineType=cv2.LINE_AA
@@ -98,27 +99,71 @@ def show_results(image, results, output_name):
                 else:
                     reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (229, 178, 93), 3)
 
-    icons = ('closet', 'toilet', 'sink', 'bathtub')
+    symbols = ('closet', 'toilet', 'sink', 'bathtub')
     colors = ((158, 107, 26), (133, 218, 255),  (58, 126, 156), (201, 30, 173))
-    for icon in results['icons']:
-        reconstr = cv2.drawContours(reconstr, [np.intp(icon['points'])], 0, colors[icons.index(icon['type'])], 3)
+    for symbol in results['symbols']:
+        reconstr = cv2.drawContours(reconstr, [np.intp(symbol['points'])], 0, colors[symbols.index(symbol['type'])], 3)
 
     for wall in results['walls']:
+        centroid = np.intp(np.mean(wall['points'], axis=0))
+        reconstr = put_text(reconstr, str(wall['width']), centroid, 0.4)
         if 'elements' in wall:
             for el in wall['elements']:
                 if el['type'] == 'door':
                     centroid = np.intp(np.mean(el['points'], axis=0))
-                    reconstr = putText(reconstr, el['orientation'][-2:], centroid, 1)
+                    reconstr = put_text(reconstr, el['orientation'][-2:], centroid, 1)
 
-    for icon in results['icons']:
-        if icon['type'] in ('toilet', 'sink'):
-            centroid = np.intp(np.mean(icon['points'], axis=0))
-            reconstr = putText(reconstr, str(icon['orientation']), centroid, 0.5)
+    for symbol in results['symbols']:
+        if symbol['type'] in ('toilet', 'sink'):
+            centroid = np.intp(np.mean(symbol['points'], axis=0))
+            reconstr = put_text(reconstr, str(symbol['orientation']), centroid, 0.5)
 
     reconstr = cv2.cvtColor(reconstr, cv2.COLOR_RGB2BGR)
     cv2.imwrite(output_name, reconstr)
 
-def main(path, method, verbose=True):
+def classify_wall_elements(walls, image, verbose):
+    '''
+        Classifies wall elements in all the walls.
+        Changes the elements destructively.
+    '''
+    logger = logging.getLogger(__name__)
+    logger.info('Classifying doors individually')
+
+    for wall in tqdm(walls, disable=not verbose):
+        if 'elements' in wall:
+            for element in wall['elements']:
+                if element['type'] == 'door':
+                    element['orientation'] = classify_door(element, wall, image)
+    return walls
+
+def calculate_wall_widths(walls, image, verbose):
+    '''
+        Calculates wallw idths, destructively changing them.
+    '''
+    logger = logging.getLogger(__name__)
+    logger.info('Calculating width of each wall individually')
+
+    for wall in tqdm(walls, disable=not verbose):
+        wall['width'] = get_wall_width(wall, image)
+
+    return walls
+
+def classify_symbols(symbols, image, verbose):
+    '''
+        Classifies symbols, destructively changing them.
+    '''
+    logger = logging.getLogger(__name__)
+    logger.info('Classifying toilets individually')
+
+    for icon in tqdm(symbols, disable=not verbose):
+        if icon['type'] == 'toilet':
+            icon['orientation'] = classify_toilet(icon, image)
+        if icon['type'] == 'sink':
+            icon['orientation'] = classify_sink(icon, image)
+    
+    return symbols
+
+def main(path, method, verbose=False):
     logging.basicConfig(format='%(asctime)s %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
     if verbose:
@@ -126,7 +171,11 @@ def main(path, method, verbose=True):
         logger.setLevel(logging.DEBUG)
     
     logger.info('Starting recognition')
-    original = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+    original = cv2.imread(path)
+    try:
+        original = cv2.cvtColor(original, cv2.COLOR_BGR2RGB)
+    except:
+        original = cv2.cvtColor(original, cv2.COLOR_GRAY2RGB)
 
     if method == 'residential':
         from residential import recognize
@@ -139,36 +188,30 @@ def main(path, method, verbose=True):
         prediction = recognize(path, verbose)
 
     walls, doors, windows = prediction['walls'], prediction['doors'], prediction['windows']
+
+    # attach and calculate widths first because normalization might move walls
     walls = attach_openings(walls, doors + windows, verbose)
-    walls = normalize_wall_points(walls, 5) # attach first because this might move walls slightly
+    walls = calculate_wall_widths(walls, original, verbose)
+
+    walls = normalize_wall_points(walls, 5)
 
     # this step can be merged with attach, probably not relevant
-    logger.info('Classifying doors individually')
-    for wall in tqdm(walls, disable=not verbose):
-        if 'elements' in wall:
-            for element in wall['elements']:
-                if element['type'] == 'door':
-                    element['orientation'] = classify_door(element, wall, original)
+    walls = classify_wall_elements(walls, original, verbose)
 
     # predicting toilet rotation
-    logger.info('Classifying toilets individually')
-    for icon in tqdm(prediction['icons'], disable=not verbose):
-        if icon['type'] == 'toilet':
-            icon['orientation'] = classify_toilet(icon, original)
-        if icon['type'] == 'sink':
-            icon['orientation'] = classify_sink(icon, original)
+    symbols = classify_symbols(prediction['symbols'], original, verbose)
 
     logger.info('Finished')
-    res = {'walls': walls, 'icons': prediction['icons']}
+    res = {'walls': walls, 'symbols': symbols}
 
     if verbose:
         path = path.split('.')
-        show_results(original, res, f'{path[0]}_{method}.{path[1]}')
+        show_results(original, res, f'{path[0]}_{method}_NOVO.{path[1]}')
 
     return res
 
 
 if __name__ == '__main__':
-    # print(main('original.png', 'residential'))
-    print(main('original.png', 'brute_force'))
-    # print(main('r2v-image-rotated.jpg', 'r2v'))
+    # print(main('original.png', 'residential', verbose=True))
+    print(main('original.png', 'brute_force', verbose=True))
+    # print(main('r2v-image-rotated.jpg', 'r2v', verbose=True))

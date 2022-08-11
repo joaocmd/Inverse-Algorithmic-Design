@@ -38,11 +38,11 @@ def recognize(image, verbose):
     windows = get_opening_lines(windows_pixels)
     windows = tuple({'points': w, 'type': 'window'} for w in windows)
 
-    logger.info('Retrieving icons')
+    logger.info('Retrieving symbols')
     closets = tuple({'points': p, 'type': 'closet'} for p in pixels_to_bb(closets_pixels))
     toilets = tuple({'points': p, 'type': 'toilet'} for p in pixels_to_bb(toilets_pixels))
     sinks = tuple({'points': p, 'type': 'sink'} for p in pixels_to_bb(sinks_pixels))
     bathtubs = tuple({'points': p, 'type': 'bathtub'} for p in pixels_to_bb(bathtubs_pixels))
 
     logger.info('Finished')
-    return {'walls': walls, 'doors': doors, 'windows': windows, 'icons': (*closets, *toilets, *sinks, *bathtubs)}
+    return {'walls': walls, 'doors': doors, 'windows': windows, 'symbols': (*closets, *toilets, *sinks, *bathtubs)}

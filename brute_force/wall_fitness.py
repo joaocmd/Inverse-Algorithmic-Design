@@ -6,7 +6,7 @@ from utils.geometry import angle_between, angle_diff
 import cv2
 import numpy as np
 
-def wallToPoly(wall, width):
+def wall_to_poly(wall, width):
     """Generates the vertices to a given wall with two endpoints and a width."""
     v = wall[1] - wall[0]
     p = np.array([v[1], -v[0]])
@@ -19,13 +19,13 @@ def wallToPoly(wall, width):
     
     return np.array([p1, p2, p3, p4])
 
-def fitness(wall, wallPixels, width):
-    new_image = np.zeros(wallPixels.shape)
-    rect = wallToPoly(wall, width)
+def fitness(wall, wall_pixels, width):
+    new_image = np.zeros(wall_pixels.shape)
+    rect = wall_to_poly(wall, width)
     new_image = np.int0(cv2.fillConvexPoly(new_image, points = np.array(rect, dtype=np.int32), color = 255))//255
 
    
-    i = np.sum(new_image & wallPixels)
+    i = np.sum(new_image & wall_pixels)
     total = np.sum(new_image)
     ratio = i/total
     return ratio
@@ -49,12 +49,12 @@ def get_junctions(heatmaps, wall_pixels, junction_threshold):
     
     return centroids
 
-def normalize_points(allpoints, distance_threshold):
+def normalize_points(all_points, distance_threshold):
     def sort_key(c):
         return (c[0], -c[1])
 
-    allx = [p[0] for p in allpoints]
-    ally = [p[1] for p in allpoints]
+    allx = [p[0] for p in all_points]
+    ally = [p[1] for p in all_points]
 
     xclusters = cluster_values(allx, distance_threshold)
     xaverages = average_cluster(xclusters[1])
@@ -63,13 +63,13 @@ def normalize_points(allpoints, distance_threshold):
     yaverages = average_cluster(yclusters[1])
 
     res = []
-    for px, py in allpoints:
+    for px, py in all_points:
         px = xaverages[1][xclusters[0][px]]
         py = yaverages[1][yclusters[0][py]]
 
         res.append([px, py])
 
-    with_original = zip(allpoints, res)
+    with_original = zip(all_points, res)
     with_original = sorted(with_original, key=lambda p: sort_key(p[1]))
     original, normalized = [p[0] for p in with_original], [p[1] for p in with_original]
     return np.array(original).astype(np.intp), np.array(normalized).astype(np.intp)
@@ -115,8 +115,9 @@ def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=
         if abs(angle - 90) < 5: # check if vertical
             if try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
                 walls.append((c1, c2))
-        
-        c2 = [c2 for c2 in zip(points[i+1:], originals[i+1:]) if c1[1] == c2[0][1]] # find next that is horizontal
+
+        # find next that is horizontal
+        c2 = [c2 for c2 in zip(points[i+1:], originals[i+1:]) if c1[1] == c2[0][1]]
         if c2 != []:
             c2, o2 = c2[0]
             if try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
