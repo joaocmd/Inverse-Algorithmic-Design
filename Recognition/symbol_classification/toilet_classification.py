@@ -1,4 +1,4 @@
-from .utils import crop_box, checkpoint_path
+from .utils import crop_box, checkpoints_path
 from .model import Model
     
 def classify_toilet(toilet, original_img):
@@ -9,6 +9,6 @@ def classify_toilet(toilet, original_img):
         original_img: original image pixels
     '''
     classes = tuple(str(c) for c in range(0, 360, 45))
-    model = Model.get(checkpoint_path/'toilets.pth', 100, classes)
+    model = Model.get(checkpoints_path/'toilets.pth', 100, classes)
     cropped_toilet = crop_box(toilet, original_img)
     return model.predict(cropped_toilet)

@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import pathlib
 
-checkpoint_path = pathlib.Path(__file__).parent.resolve()/'checkpoints'
+checkpoints_path = pathlib.Path(__file__).parent.resolve()/'checkpoints'
 
 def crop_box(toilet, img, padding=10):
     xx = [p[0] for p in toilet['points']]

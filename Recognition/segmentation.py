@@ -6,13 +6,17 @@ from floortrans.models import get_model
 from floortrans.loaders import RotateNTurns
 from floortrans.post_prosessing import split_prediction
 
+import pathlib
+
+checkpoint_path = pathlib.Path(__file__).parent.resolve()/'model_best_val_loss_var.pkl'
+
 room_classes = ["Background", "Outdoor", "Wall", "Kitchen", "Living Room" ,"Bed Room", "Bath", "Entry", "Railing", "Storage", "Garage", "Undefined"]
 icon_classes = ["No Icon", "Window", "Door", "Closet", "Electrical Applience" ,"Toilet", "Sink", "Sauna Bench", "Fire Place", "Bathtub", "Chimney"]
 n_classes = 44
 model = get_model('hg_furukawa_original', 51)
 model.conv4_ = torch.nn.Conv2d(256, n_classes, bias=True, kernel_size=1)
 model.upsample = torch.nn.ConvTranspose2d(n_classes, n_classes, kernel_size=4, stride=4)
-checkpoint = torch.load('model_best_val_loss_var.pkl')
+checkpoint = torch.load(checkpoint_path)
 
 model.load_state_dict(checkpoint['model_state'])
 model.eval()

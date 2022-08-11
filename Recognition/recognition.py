@@ -163,7 +163,7 @@ def classify_symbols(symbols, image, verbose):
     
     return symbols
 
-def main(path, method, verbose=False):
+def main(path, method, verbose=False, save_results=False):
     logging.basicConfig(format='%(asctime)s %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
     if verbose:
@@ -204,14 +204,14 @@ def main(path, method, verbose=False):
     logger.info('Finished')
     res = {'walls': walls, 'symbols': symbols}
 
-    if verbose:
+    if save_results:
         path = path.split('.')
-        show_results(original, res, f'{path[0]}_{method}_NOVO.{path[1]}')
+        show_results(original, res, f'{path[0]}_{method}.{path[1]}')
 
     return res
 
 
 if __name__ == '__main__':
     # print(main('original.png', 'residential', verbose=True))
-    print(main('original.png', 'brute_force', verbose=True))
+    print(main('original.png', 'brute_force', verbose=True, save_results=True))
     # print(main('r2v-image-rotated.jpg', 'r2v', verbose=True))

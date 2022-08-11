@@ -232,8 +232,12 @@ class hg_furukawa_original(nn.Module):
     def init_weights(self):
         # Pre-trained network weights from Human pose estimation via Convolutional Part Heatmap Regression
         # https://www.adrianbulat.com/human-pose-estimation MPII
+
+        import pathlib
+        checkpoint_path = pathlib.Path(__file__).parent.resolve()/'model_1427.pth'
+
         model = model_1427.model_1427
-        model.load_state_dict(torch.load('floortrans/models/model_1427.pth'))
+        model.load_state_dict(torch.load(checkpoint_path))
 
         for (src, dst) in zip(model.parameters(), self.parameters()):
             dst[:].data.copy_(src[:].data)
