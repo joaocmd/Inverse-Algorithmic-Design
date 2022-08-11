@@ -48,6 +48,6 @@ def classify_door(door, wall, original_img):
         'single_dl', 'single_dr', 'single_ul', 'single_ur',
     )
 
-    model = Model.get(checkpoints_path/'doors.pth', 100, classes)
+    model = Model.get(checkpoints_path/'doors.pth', 40, classes)
     cropped_door = crop_door(door, wall, original_img)
     return model.predict(cropped_door)
