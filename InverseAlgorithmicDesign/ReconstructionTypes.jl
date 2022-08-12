@@ -52,6 +52,7 @@ struct IndexedWall
     p::Index
     q::Index
     elements::Vector{EmbeddedElement}
+    thickness::Float64
 end
 
 function IndexedWall(wall::AdjustedWall, xclusters, yclusters, pclusters)
@@ -61,7 +62,7 @@ function IndexedWall(wall::AdjustedWall, xclusters, yclusters, pclusters)
     q_coords = (xclusters[wall.q.x], yclusters[wall.q.y])
     q = pclusters[q_coords]
 
-    return IndexedWall(p, q, wall.elements)
+    return IndexedWall(p, q, wall.elements, wall.thickness)
 end
 
 Base.isless(w1::IndexedWall, w2::IndexedWall) = w1.p < w2.p || (w1.p == w2.p && w1.q < w2.q)
