@@ -1,6 +1,6 @@
 import sys, os.path as path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-from utils.cluster_points import cluster_values, average_cluster
+from utils.cluster_points import hcluster, mean_cluster
 from utils.geometry import angle_between, angle_diff
 
 import cv2
@@ -56,11 +56,11 @@ def normalize_points(all_points, distance_threshold):
     allx = [p[0] for p in all_points]
     ally = [p[1] for p in all_points]
 
-    xclusters = cluster_values(allx, distance_threshold)
-    xaverages = average_cluster(xclusters[1])
+    xclusters = hcluster(allx, distance_threshold)
+    xaverages = mean_cluster(xclusters[1])
 
-    yclusters = cluster_values(ally, distance_threshold)
-    yaverages = average_cluster(yclusters[1])
+    yclusters = hcluster(ally, distance_threshold)
+    yaverages = mean_cluster(yclusters[1])
 
     res = []
     for px, py in all_points:
