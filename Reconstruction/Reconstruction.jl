@@ -49,8 +49,8 @@ function hcluster(values::Vector{IndexTuple})
     return valuetoindex, indextovalues
 end
 
-function reconstruct_wall_points(walls, distance_threshold=1.0)
-    allpoints = [([[w.p, w.q] for w in elements.walls]...)...]
+function reconstruct_wall_points(walls; distancethreshold=1.0)
+    allpoints = [([[w.p, w.q] for w in walls]...)...]
     allx = map(p -> p.x, allpoints)
     ally = map(p -> p.y, allpoints)
 
@@ -67,13 +67,29 @@ function reconstruct_wall_points(walls, distance_threshold=1.0)
     return xclusters, xaverages, yclusters, yaverages, pclusters
 end
 
-function reconstruct_element_scalars(elements; distancethreshold = 0.1)
-    allthicknesses = [([w.thickness for w in elements.walls]...)...]
-    tclusters = hcluster()
+function reconstruct_element_scalars(walls; thicknessthreshold=1, widththreshold=0.2)
+    allthicknesses = [([w.thickness for w in walls]...)...]
+    tclusters = hcluster(sort(allthicknesses), thicknessthreshold)
+    taverages = median_cluster(tclusters[2])
+
+    wallelements = [([w.elements for w in walls]...)...]
+
+    doors = [e for e in wallelements if e isa Door]
+    doorwidths = [length(d) for d in doors]
+    dclusters = hcluster(sort(doorwidths), widththreshold)
+    daverages = median_cluster(dclusters[2])
+
+    windows = [e for e in wallelements if e isa Window]
+    windowwidths = [length(w) for w in windows]
+    wclusters = hcluster(sort(windowwidths), widththreshold)
+    waverages = median_cluster(wclusters[2])
+
+    return tclusters, taverages, dclusters, daverages, wclusters, waverages
 end
 
 function reconstruct(elements; distancethreshold=1.0)
     xclusters, xaverages, yclusters, yaverages, pclusters = reconstruct_wall_points(elements.walls; distancethreshold=distancethreshold)
+    tclusters, taverages, dclusters, daverages, wclusters, waverages = reconstruct_element_scalars(elements.walls)
 
     walls = [AdjustedWall(w, xclusters[1], xaverages[2], yclusters[1], yaverages[2]) for w in elements.walls]
     indexed_walls = [IndexedWall(w, xaverages[1], yaverages[1], pclusters[1]) for w in walls]
