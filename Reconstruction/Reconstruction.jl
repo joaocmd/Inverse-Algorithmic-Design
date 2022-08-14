@@ -91,8 +91,24 @@ function reconstruct(elements; distancethreshold=1.0)
     xclusters, xaverages, yclusters, yaverages, pclusters = reconstruct_wall_points(elements.walls; distancethreshold=distancethreshold)
     tclusters, taverages, dclusters, daverages, wclusters, waverages = reconstruct_element_scalars(elements.walls)
 
-    walls = [AdjustedWall(w, xclusters[1], xaverages[2], yclusters[1], yaverages[2]) for w in elements.walls]
-    indexed_walls = [IndexedWall(w, xaverages[1], yaverages[1], pclusters[1]) for w in walls]
+    walls = [
+        AdjustedWall(w,
+            xclusters[1], xaverages[2], yclusters[1], yaverages[2],
+            tclusters[1], taverages[2],
+            dclusters[1], daverages[2], wclusters[1], waverages[2])
+        for w in elements.walls
+    ]
 
-    return (xvalues=xaverages[2], yvalues=yaverages[2], points=pclusters[2], walls=indexed_walls)
+    indexed_walls = [
+        IndexedWall(w,
+            xaverages[1], yaverages[1], pclusters[1],
+            taverages[1], daverages[1], waverages[1])
+        for w in walls
+    ]
+
+    return (
+        xvalues=xaverages[2], yvalues=yaverages[2], points=pclusters[2],
+        walls=indexed_walls,
+        tvalues=taverages[2], dvalues=daverages[2], wvalues=waverages[2]
+    )
 end
