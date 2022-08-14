@@ -78,7 +78,7 @@ function reconstruct_element_scalars(walls;
 
     doors = [e for e in wallelements if e isa Door]
     doorwidths = [length(d) for d in doors]
-    dclusters = hcluster(sort(doorwidths), widththreshold)
+    dclusters = hcluster(sort(doorwidths), widththreshold, widthclusters)
     daverages = median_cluster(dclusters[2])
 
     windows = [e for e in wallelements if e isa Window]

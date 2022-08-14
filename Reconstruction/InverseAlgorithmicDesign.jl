@@ -10,7 +10,7 @@ function main(file; maxpointdistance=0.3, rounddigits=nothing, generatelines=tru
 
     write_plan(out,
         elements.xvalues, elements.yvalues, elements.points,
-        elements.walls, elements.tvalues, elements.xvalues, elements.wvalues,
+        elements.walls, elements.tvalues, elements.dvalues, elements.wvalues,
         rounddigits=rounddigits,
         generatelines=generatelines,
         generatescalars=generatescalars
