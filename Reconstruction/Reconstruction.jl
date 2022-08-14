@@ -5,24 +5,21 @@ using Clustering
 include("Types.jl")
 include("ReconstructionTypes.jl")
 
-function mean_cluster(clusters::Dict{Index,Vector{Float64}})::Tuple{Dict{Float64,Index},Dict{Index,Float64}}
-    meanstoindex = Dict(Statistics.mean(j) => i for (i, j) in clusters)
-    indextomean = Dict(i => Statistics.mean(j) for (i, j) in clusters)
-
-    return meanstoindex, indextomean
+function mean_cluster(clusters::Dict{Index,Vector{Float64}})::Dict{Index,Float64}
+    return Dict(i => Statistics.mean(j) for (i, j) in clusters)
 end
 
-function median_cluster(clusters::Dict{Index,Vector{Float64}})::Tuple{Dict{Float64,Index},Dict{Index,Float64}}
-    medianstoindex = Dict(Statistics.median(j) => i for (i, j) in clusters)
-    indextomedian = Dict(i => Statistics.median(j) for (i, j) in clusters)
-
-    return medianstoindex, indextomedian
+function median_cluster(clusters::Dict{Index,Vector{Float64}})::Dict{Index,Float64}
+    return Dict(i => Statistics.median(j) for (i, j) in clusters)
 end
 
-function hcluster(values::Vector{<:Real}, distancethreshold)
+function hcluster(values::Vector{<:Real}, distancethreshold, nclusters=nothing)
     values = sort(values)
     D = pairwise(Euclidean(), values'; dims=2)
-    clusters = cutree(hclust(D, linkage=:complete); h=distancethreshold)
+
+    clusters = nclusters == nothing ?
+               cutree(hclust(D, linkage=:complete); h=distancethreshold) :
+               cutree(hclust(D, linkage=:complete); k=nclusters)
 
     valuetoindex = Dict(values[i] => clusters[i] for i in 1:length(values))
     indextovalues = Dict(i => values[clusters.==i] for i in unique(clusters))
@@ -64,12 +61,17 @@ function reconstruct_wall_points(walls; distancethreshold=1.0)
     indexed_points = map(p -> (xclusters[1][p.x], yclusters[1][p.y]), allpoints)
     pclusters = hcluster(indexed_points)
 
-    return xclusters, xaverages, yclusters, yaverages, pclusters
+    return xclusters[1], xaverages, yclusters[1], yaverages, pclusters[1], pclusters[2]
 end
 
-function reconstruct_element_scalars(walls; thicknessthreshold=1, widththreshold=0.2)
+function reconstruct_element_scalars(walls;
+    thicknessthreshold=1,
+    thicknessclusters=nothing,
+    widththreshold=0.2,
+    widthclusters=nothing
+)
     allthicknesses = [([w.thickness for w in walls]...)...]
-    tclusters = hcluster(sort(allthicknesses), thicknessthreshold)
+    tclusters = hcluster(sort(allthicknesses), thicknessthreshold, thicknessclusters)
     taverages = median_cluster(tclusters[2])
 
     wallelements = [([w.elements for w in walls]...)...]
@@ -81,34 +83,27 @@ function reconstruct_element_scalars(walls; thicknessthreshold=1, widththreshold
 
     windows = [e for e in wallelements if e isa Window]
     windowwidths = [length(w) for w in windows]
-    wclusters = hcluster(sort(windowwidths), widththreshold)
+    wclusters = hcluster(sort(windowwidths), widththreshold, widthclusters)
     waverages = median_cluster(wclusters[2])
 
-    return tclusters, taverages, dclusters, daverages, wclusters, waverages
+    return tclusters[1], taverages, dclusters[1], daverages, wclusters[1], waverages
 end
 
-function reconstruct(elements; distancethreshold=1.0)
-    xclusters, xaverages, yclusters, yaverages, pclusters = reconstruct_wall_points(elements.walls; distancethreshold=distancethreshold)
+function reconstruct(elements; maxpointdistance=1.0)
+    xclusters, xaverages, yclusters, yaverages, pclusters, pvalues = reconstruct_wall_points(elements.walls; distancethreshold=maxpointdistance)
     tclusters, taverages, dclusters, daverages, wclusters, waverages = reconstruct_element_scalars(elements.walls)
 
-    walls = [
-        AdjustedWall(w,
-            xclusters[1], xaverages[2], yclusters[1], yaverages[2],
-            tclusters[1], taverages[2],
-            dclusters[1], daverages[2], wclusters[1], waverages[2])
+    indexedwalls = [
+        IndexedWall(w,
+            xclusters, xaverages, yclusters, yaverages, pclusters,
+            tclusters, dclusters, wclusters)
         for w in elements.walls
     ]
 
-    indexed_walls = [
-        IndexedWall(w,
-            xaverages[1], yaverages[1], pclusters[1],
-            taverages[1], daverages[1], waverages[1])
-        for w in walls
-    ]
-
     return (
-        xvalues=xaverages[2], yvalues=yaverages[2], points=pclusters[2],
-        walls=indexed_walls,
-        tvalues=taverages[2], dvalues=daverages[2], wvalues=waverages[2]
+        xvalues=xaverages, yvalues=yaverages, points=pvalues,
+        walls=indexedwalls,
+        tvalues=taverages, dvalues=daverages, wvalues=waverages,
+        symbols=elements.symbols
     )
 end

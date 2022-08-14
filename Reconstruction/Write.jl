@@ -40,8 +40,8 @@ end
 function define_walls(walls, rounddigits)
     get_value(val) = rounddigits === nothing ? val : round(val, digits = rounddigits)
 
-    define_element(element::EmbeddedDoor) = :(mydoor($(get_value(element.p)), $(get_value(element.width))))
-    define_element(element::EmbeddedWindow) = :(mywindow($(get_value(element.p)), $(get_value(element.width))))
+    define_element(element::IndexedDoor) = :(mydoor($(get_value(element.p)), $(get_value(element.width))))
+    define_element(element::IndexedWindow) = :(mywindow($(get_value(element.p)), $(get_value(element.width))))
 
     function define_wall(idx, wall)
         p = Symbol(:p, wall.p)

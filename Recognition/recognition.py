@@ -153,7 +153,7 @@ def classify_symbols(symbols, image, verbose):
         Classifies symbols, destructively changing them.
     '''
     logger = logging.getLogger(__name__)
-    logger.info('Classifying toilets individually')
+    logger.info('Classifying symbols individually')
 
     for icon in tqdm(symbols, disable=not verbose):
         if icon['type'] == 'toilet':
