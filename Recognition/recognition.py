@@ -86,7 +86,7 @@ def show_results(image, results, output_name):
     # reconstr = np.full(image.shape, 255).astype(np.uint8)
     for wall in results['walls']:
         s, e = wall['points']
-        reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (66, 67, 66), 3)
+        reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (66, 67, 66), wall["width"])
         reconstr = cv2.circle(reconstr, np.intp(s), 3, (91, 93, 91), 3)
         reconstr = cv2.circle(reconstr, np.intp(e), 3, (91, 93, 91), 3)
 
@@ -179,10 +179,10 @@ def main(path, method, verbose=False, save_results=False):
 
     if method == 'residential':
         from residential import recognize
-        prediction = recognize(original, verbose)
+        prediction, segmentation = recognize(original, verbose)
     elif method == 'brute_force':
         from brute_force import recognize
-        prediction = recognize(original, verbose)
+        prediction, segmentation = recognize(original, verbose)
     elif method == 'r2v':
         from raster_to_vector import recognize
         prediction = recognize(path, verbose)
@@ -191,7 +191,8 @@ def main(path, method, verbose=False, save_results=False):
 
     # attach and calculate widths first because normalization might move walls
     walls = attach_openings(walls, doors + windows, verbose)
-    walls = calculate_wall_widths(walls, original, verbose)
+    if method != 'r2v':
+        walls = calculate_wall_widths(walls, segmentation, verbose)
 
     walls = normalize_wall_points(walls, 5)
 
