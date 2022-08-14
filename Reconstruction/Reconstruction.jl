@@ -65,8 +65,8 @@ function reconstruct_wall_points(walls; distancethreshold=1.0)
 end
 
 function reconstruct_element_scalars(walls;
-    thicknessthreshold=1,
-    thicknessclusters=nothing,
+    thicknessthreshold=nothing,
+    thicknessclusters=2,
     widththreshold=0.2,
     widthclusters=nothing
 )

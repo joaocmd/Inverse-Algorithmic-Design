@@ -1,5 +1,7 @@
 # export write_plan
 
+import JuliaFormatter
+
 include("ReconstructionTypes.jl")
 
 "Defines values' symbols, such as `x1 = 1.5`."
@@ -105,4 +107,6 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
         end
         println(io, :(show_points([n for n in names(Main) if startswith(string(n), "p")])))
     end
+
+    JuliaFormatter.format(file, JuliaFormatter.MinimalStyle())
 end
