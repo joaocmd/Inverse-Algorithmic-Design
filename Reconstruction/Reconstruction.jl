@@ -17,7 +17,7 @@ function hcluster(values::Vector{<:Real}, distancethreshold, nclusters=nothing)
     values = sort(values)
     D = pairwise(Euclidean(), values'; dims=2)
 
-    clusters = nclusters == nothing ?
+    clusters = nclusters === nothing ?
                cutree(hclust(D, linkage=:complete); h=distancethreshold) :
                cutree(hclust(D, linkage=:complete); k=nclusters)
 

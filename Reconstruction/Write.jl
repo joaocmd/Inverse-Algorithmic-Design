@@ -4,7 +4,7 @@ include("ReconstructionTypes.jl")
 
 "Defines values' symbols, such as `x1 = 1.5`."
 function define_values(prefix, indextovalue, rounddigits)
-    get_value(idx) = rounddigits === nothing ? indextovalue[idx] : round(indextovalue[idx], digits = rounddigits)
+    get_value(idx) = rounddigits === nothing ? indextovalue[idx] : round(indextovalue[idx], digits=rounddigits)
 
     return [:($(Symbol(prefix, idx)) = $(get_value(idx))) for idx in sort(collect(keys(indextovalue)))]
 end
@@ -20,7 +20,7 @@ end
 
 "Generates the points' symbols using the values directly."
 function define_points(indextovalue, xvalues, yvalues, rounddigits)
-    get_value(val) = rounddigits === nothing ? val : round(val, digits = rounddigits)
+    get_value(val) = rounddigits === nothing ? val : round(val, digits=rounddigits)
 
     function define_point(idx)
         x, y = indextovalue[idx]
@@ -37,36 +37,38 @@ end
 
 # TODO: Usar um Dict como nos outros lados
 "Defines walls' symbols, such as `wall1 = MyWall([p1, p2])`."
-function define_walls(walls, rounddigits)
-    get_value(val) = rounddigits === nothing ? val : round(val, digits = rounddigits)
+function define_walls(walls, tvalues, dvalues, wvalues, rounddigits, generatescalars)
+    get_value(val) = rounddigits === nothing ? val : round(val, digits=rounddigits)
+    get_value(idx, values) = generatescalars ? idx : get_value(values[idx])
 
-    define_element(element::IndexedDoor) = :(mydoor($(get_value(element.p)), $(get_value(element.width))))
-    define_element(element::IndexedWindow) = :(mywindow($(get_value(element.p)), $(get_value(element.width))))
+    define_element(element::IndexedDoor) = :(mydoor($(get_value(element.p)), $(get_value(element.width, dvalues))))
+    define_element(element::IndexedWindow) = :(mywindow($(get_value(element.p)), $(get_value(element.width, wvalues))))
 
     function define_wall(idx, wall)
         p = Symbol(:p, wall.p)
         q = Symbol(:p, wall.q)
 
         if isempty(wall.elements)
-            return :($(Symbol(:wall, idx)) = mywall([$p, $q]))
+            return :($(Symbol(:wall, idx)) = mywall([$p, $q], $(get_value(wall.thickness, tvalues))))
         else
             # door_locs = [define_door(door) for door in wall.elements]
-            return :($(Symbol(:wall, idx)) = mywall([$p, $q], parts = [$(map(define_element, wall.elements)...)]))
+            return :($(Symbol(:wall, idx)) = mywall([$p, $q], $(get_value(wall.thickness, tvalues)), parts=[$(map(define_element, wall.elements)...)]))
         end
     end
     return [define_wall(idx, wall) for (idx, wall) in enumerate(sort(walls))]
 end
 
-function write_plan(file, xvalues, yvalues, points, walls; rounddigits = nothing, generatelines = true)
+function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths, wwidths;
+    rounddigits=nothing, generatelines=true, generatescalars=false)
     xx = define_values("x", xvalues, rounddigits)
     yy = define_values("y", yvalues, rounddigits)
     pp = define_points(points, xvalues, yvalues, rounddigits, generatelines)
-    walls = define_walls(walls, rounddigits)
+    walls = define_walls(walls, thicknesses, dwidths, wwidths, rounddigits, generatescalars)
 
     open(file, "w") do io
         println(io, :(import Pkg))
-        println(io, :(Pkg.add(Pkg.PackageSpec(name = "KhepriBase", url = "https://github.com/aptmcl/KhepriBase.jl"))))
-        println(io, :(Pkg.add(Pkg.PackageSpec(name = "KhepriBlender", url = "https://github.com/aptmcl/KhepriBlender.jl"))))
+        println(io, :(Pkg.add(Pkg.PackageSpec(name="KhepriBase", url="https://github.com/aptmcl/KhepriBase.jl"))))
+        println(io, :(Pkg.add(Pkg.PackageSpec(name="KhepriBlender", url="https://github.com/aptmcl/KhepriBlender.jl"))))
         println(io, "##\n")
 
         println(io, :(using KhepriBlender: xy, delete_all_shapes))

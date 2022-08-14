@@ -24,18 +24,18 @@ end
 
 mywindow(p, width) = MyWindow(p, width)
 
-function mywall(wall_path, thickness = 0.2; parts = [])
-    
-    with_wall_family(thickness = thickness) do
+function mywall(wall_path, thickness=0.2; parts=[])
+
+    with_wall_family(thickness=thickness) do
         w = wall(wall_path)
 
         for part in parts
             if part isa MyWindow
-                with_window_family(width = part.width,) do
+                with_window_family(width=part.width,) do
                     add_window(w, xy(part.p, 1))
                 end
             elseif part isa MyDoor
-                with_door_family(width = part.width) do
+                with_door_family(width=part.width) do
                     add_door(w, x(part.p))
                 end
             end
