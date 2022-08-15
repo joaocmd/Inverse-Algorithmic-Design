@@ -110,7 +110,7 @@ wall29 = mywall([p20, p22], 0.15)
 wall30 = mywall([p21, p26], 0.3, parts=[mywindow(0.35, 1.14)])
 wall31 = mywall([p23, p24], 0.15)
 wall32 = mywall([p24, p25], 0.3, parts=[mywindow(0.51, 0.53)])
-wall33 = mywall([p24, p30], 0.3, parts=[mywindow(0.59, 1.14), mydoor(3.17, 0.84)])
+wall33 = mywall([p24, p30], 0.3, parts=[mydoor(3.17, 0.84), mywindow(0.59, 1.14)])
 wall34 = mywall([p26, p27], 0.3, parts=[mywindow(0.34, 0.53)])
 wall35 = mywall([p27, p35], 0.3, parts=[mywindow(2.82, 1.36)])
 wall36 = mywall([p28, p29], 0.15)
@@ -134,6 +134,9 @@ wall53 = mywall([p41, p42], 0.3, parts=[mydoor(0.43, 0.84)])
 
 ##
 
-show_x_lines([n for n = names(Main) if startswith(string(n), "x")])
-show_y_lines([n for n = names(Main) if startswith(string(n), "y")])
+namesx = [n for n = names(Main) if startswith(string(n), "x")]
+namesy = [n for n = names(Main) if startswith(string(n), "y")]
+
+show_x_lines(namesx, namesy)
+show_y_lines(namesy, namesx)
 show_points([n for n = names(Main) if startswith(string(n), "p")])

@@ -102,8 +102,12 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
         println(io, "\n##\n")
 
         if generatelines
-            println(io, :(show_x_lines([n for n in names(Main) if startswith(string(n), "x")])))
-            println(io, :(show_y_lines([n for n in names(Main) if startswith(string(n), "y")])))
+            println(io, :(namesx = [n for n in names(Main) if startswith(string(n), "x")]))
+            println(io, :(namesy = [n for n in names(Main) if startswith(string(n), "y")]))
+            println(io)
+
+            println(io, :(show_x_lines(namesx, namesy)))
+            println(io, :(show_y_lines(namesy, namesx)))
         end
         println(io, :(show_points([n for n in names(Main) if startswith(string(n), "p")])))
     end
