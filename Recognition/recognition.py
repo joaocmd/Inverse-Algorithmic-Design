@@ -86,7 +86,13 @@ def show_results(image, results, output_name):
     # reconstr = np.full(image.shape, 255).astype(np.uint8)
     for wall in results['walls']:
         s, e = wall['points']
-        reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (66, 67, 66), wall["width"])
+        # reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (66, 66, 66), wall["width"])
+        reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (130, 66, 66), wall["width"])
+
+    alpha = 0.5
+    reconstr = cv2.addWeighted(reconstr, alpha, image, 1 - alpha, 0)
+    
+    for wall in results['walls']:
         reconstr = cv2.circle(reconstr, np.intp(s), 3, (91, 93, 91), 3)
         reconstr = cv2.circle(reconstr, np.intp(e), 3, (91, 93, 91), 3)
 
