@@ -1,21 +1,41 @@
 export recognize
 
 import Conda
+import ImageMagick
 using PyCall
+
 include("Types.jl")
+include("Clustering.jl")
 
-const scale_factor = 0.1
+function fix_coordinates(elements, scaledetection, file;
+    scalefactor=0.1,
+    realwidth=30
+)
+    adjust = nothing
+    factor = nothing
+    width, height = ImageMagick.metadata(file)[1]
 
-function change_coordinates(p::XY)::XY
-    return XY(p.x, 255 - p.y) * scale_factor
-end
+    if scaledetection === :none
+        return elements
+    elseif scaledetection === :factor
+        factor = scalefactor
+        adjust = (p::XY) -> XY(p.x, height - p.y) * factor
+    elseif scaledetection === :width
+        factor = realwidth / width
+        adjust = (p::XY) -> XY(p.x, height - p.y) * factor
+    elseif scaledetection === :walls
+        allthicknesses = [([w.thickness for w in elements.walls]...)...]
+        tclusters = hcluster(sort(allthicknesses), nothing, 2)
+        medianthickwall = median_cluster(tclusters[2])[2]
+        factor = 0.3 / medianthickwall # assuming 0.3m for thick walls
+        adjust = (p::XY) -> XY(p.x, height - p.y) * factor
+    end
 
-function fix_coordinates(elements)
     for wall in elements.walls
-        wall.p, wall.q = change_coordinates(wall.p), change_coordinates(wall.q)
-        wall.thickness *= scale_factor
+        wall.p, wall.q = adjust(wall.p), adjust(wall.q)
+        wall.thickness *= factor
         for el in wall.elements
-            el.p, el.q = change_coordinates(el.p), change_coordinates(el.q)
+            el.p, el.q = adjust(el.p), adjust(el.q)
         end
     end
 
@@ -34,7 +54,7 @@ function segment_from_door(door::LineSegment)
     return LineSegment(c - normal * halfwidth, c + normal * halfwidth)
 end
 
-function recognize(file; forceinstall=false)
+function recognize(file, scaledetection; forceinstall=false)
     recognitionpath = joinpath(@__DIR__, "../Recognition/")
 
     if !isfile(file)
@@ -62,5 +82,5 @@ function recognize(file; forceinstall=false)
         symbols=results_raw["symbols"]
     )
 
-    return fix_coordinates(results)
+    return fix_coordinates(results, scaledetection, file)
 end

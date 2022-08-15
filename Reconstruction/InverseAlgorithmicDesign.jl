@@ -4,8 +4,17 @@ include("Recognition.jl")
 include("Reconstruction.jl")
 include("Write.jl")
 
-function main(file; maxpointdistance=0.3, rounddigits=nothing, generatelines=true, generatescalars=false, out=joinpath(@__DIR__, "out.jl"))
-    results = recognize(file)
+function main(file;
+    saverecognition=nothing,
+    scaledetection=:walls,
+    maxpointdistance=0.3,
+    rounddigits=nothing,
+    generatelines=true,
+    generatescalars=false,
+    out=joinpath(@__DIR__, "out.jl")
+)
+
+    results = recognize(file, scaledetection)
     elements = reconstruct(results, maxpointdistance=maxpointdistance)
 
     write_plan(out,
@@ -19,6 +28,7 @@ end
 
 main("/mnt/c/Users/joaodavid/Desktop/practical/Recognition/original.png",
     maxpointdistance=0.3,
+    scaledetection=:walls,
     rounddigits=2,
     generatelines=true,
     generatescalars=false)

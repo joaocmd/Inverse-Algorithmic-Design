@@ -81,7 +81,7 @@ def put_text(img, text, pos, size=1):
     )
     return img
 
-def show_results(image, results, output_name):
+def show_results(image, results, output_name, segmentation=None):
     reconstr = np.copy(image)
     # reconstr = np.full(image.shape, 255).astype(np.uint8)
     for wall in results['walls']:
@@ -126,6 +126,9 @@ def show_results(image, results, output_name):
 
     reconstr = cv2.cvtColor(reconstr, cv2.COLOR_RGB2BGR)
     cv2.imwrite(output_name, reconstr)
+    name, fileformat = output_name.split('.')
+    if segmentation is not None:
+        cv2.imwrite(f'{name}-SEGMENTATION.{fileformat}', segmentation)
 
 def classify_wall_elements(walls, image, verbose):
     '''
@@ -213,7 +216,7 @@ def main(path, method, verbose=False, save_results=False):
 
     if save_results:
         path = path.split('.')
-        show_results(original, res, f'{path[0]}_{method}.{path[1]}')
+        show_results(original, res, f'{path[0]}_{method}.{path[1]}', segmentation)
 
     return res
 
