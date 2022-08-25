@@ -39,7 +39,7 @@ end
 
 # TODO: Usar um Dict como nos outros lados
 "Defines walls' symbols, such as `wall1 = MyWall([p1, p2])`."
-function define_walls(walls, tvalues, dvalues, wvalues, rounddigits, generatescalars)
+function define_walls(walls, tvalues, dvalues, wvalues, rounddigits, generatescalars, wallwrappers)
     get_value(val) = rounddigits === nothing ? val : round(val, digits=rounddigits)
     get_value(idx, values) = generatescalars ? idx : get_value(values[idx])
 
@@ -50,22 +50,37 @@ function define_walls(walls, tvalues, dvalues, wvalues, rounddigits, generatesca
         p = Symbol(:p, wall.p)
         q = Symbol(:p, wall.q)
 
-        if isempty(wall.elements)
-            return :($(Symbol(:wall, idx)) = mywall([$p, $q], $(get_value(wall.thickness, tvalues))))
+        if wallwrappers
+            fname = wall.thickness == 1 ? :thinwall : :thickwall
+            if isempty(wall.elements)
+                return :($(Symbol(:wall, idx)) = $fname([$p, $q]))
+            else
+                # TODO: elements = sort(wall.element, ke)
+                return :($(Symbol(:wall, idx)) = $fname([$p, $q]; parts=[$(map(define_element, wall.elements)...)]))
+            end
         else
-            # door_locs = [define_door(door) for door in wall.elements]
-            return :($(Symbol(:wall, idx)) = mywall([$p, $q], $(get_value(wall.thickness, tvalues)), parts=[$(map(define_element, wall.elements)...)]))
+            if isempty(wall.elements)
+                return :($(Symbol(:wall, idx)) = mywall([$p, $q], $(get_value(wall.thickness, tvalues))))
+            else
+                return :($(Symbol(:wall, idx)) = mywall([$p, $q], $(get_value(wall.thickness, tvalues)); parts=[$(map(define_element, wall.elements)...)]))
+            end
         end
     end
     return [define_wall(idx, wall) for (idx, wall) in enumerate(sort(walls))]
 end
 
+"Defines wrappers for thin and thick walls, only used when there are only two wall clusters."
+function define_wall_wrappers(thicknesses)
+    function define_wrapper(thickness, name)
+        return "$(name)wall(wallpath; parts=[]) = mywall(wallpath, $thickness; parts=parts)"
+    end
+    return map(t -> define_wrapper(t...), zip(thicknesses, ["thin", "thick"]))
+end
+
 function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths, wwidths;
-    rounddigits=nothing, generatelines=true, generatescalars=false)
-    xx = define_values("x", xvalues, rounddigits)
-    yy = define_values("y", yvalues, rounddigits)
-    pp = define_points(points, xvalues, yvalues, rounddigits, generatelines)
-    walls = define_walls(walls, thicknesses, dwidths, wwidths, rounddigits, generatescalars)
+    rounddigits=nothing, generatelines=true, generatescalars=false, wallwrappers=true)
+    # TODO: generatescalars not currently supported
+    createwallwrappers = wallwrappers && length(thicknesses) == 2
 
     open(file, "w") do io
         println(io, :(import Pkg))
@@ -75,30 +90,34 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
 
         println(io, :(using KhepriBlender: xy, delete_all_shapes))
         println(io, :(include("OutAux.jl")))
+        println(io)
+
+        if createwallwrappers
+            for wrapper in define_wall_wrappers(sort([values(thicknesses)...]))
+                println(io, wrapper)
+            end
+            println(io)
+        end
 
         if generatelines
-            for x in xx
-                println(io, x)
-            end
+            xx = define_values("x", xvalues, rounddigits)
+            foreach(x -> println(io, x), xx)
             println(io)
 
-            for y in yy
-                println(io, y)
-            end
+            yy = define_values("y", yvalues, rounddigits)
+            foreach(y -> println(io, y), yy)
             println(io)
         end
 
-        for p in pp
-            println(io, p)
-        end
+        pp = define_points(points, xvalues, yvalues, rounddigits, generatelines)
+        foreach(p -> println(io, p), pp)
         println(io, "\n##\n")
 
         println(io, :(delete_all_shapes()))
         println(io)
 
-        for wall in walls
-            println(io, wall)
-        end
+        walls = define_walls(walls, thicknesses, dwidths, wwidths, rounddigits, generatescalars, createwallwrappers)
+        foreach(wall -> println(io, wall), walls)
         println(io, "\n##\n")
 
         if generatelines

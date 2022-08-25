@@ -9,8 +9,9 @@ function main(file;
     scaledetection=:walls,
     maxpointdistance=0.3,
     rounddigits=nothing,
-    generatelines=true,
     generatescalars=false,
+    wallwrappers=true,
+    generatelines=true,
     out=joinpath(@__DIR__, "out.jl")
 )
 
@@ -21,8 +22,9 @@ function main(file;
         elements.xvalues, elements.yvalues, elements.points,
         elements.walls, elements.tvalues, elements.dvalues, elements.wvalues,
         rounddigits=rounddigits,
-        generatelines=generatelines,
-        generatescalars=generatescalars
+        generatescalars=generatescalars,
+        wallwrappers=wallwrappers,
+        generatelines=generatelines
     )
 end
 
@@ -30,6 +32,7 @@ main("/mnt/c/Users/joaodavid/Desktop/practical/Recognition/original.png",
     maxpointdistance=0.3,
     scaledetection=:walls,
     rounddigits=2,
-    generatelines=true,
-    generatescalars=false)
+    generatescalars=false,
+    wallwrappers=true,
+    generatelines=true)
 end

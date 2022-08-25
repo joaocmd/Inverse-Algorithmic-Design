@@ -25,10 +25,10 @@ end
 
 mywindow(p, width) = MyWindow(p, width)
 
-function mywall(wall_path, thickness=0.2; parts=[])
+function mywall(wallpath, thickness=0.2; parts=[])
 
     with_wall_family(thickness=thickness) do
-        w = wall(wall_path)
+        w = wall(wallpath)
 
         for part = parts
             if part isa MyWindow
