@@ -30,6 +30,7 @@ function IndexedWall(wall, xclusters, xvalues, yclusters, yvalues, pclusters,
     p, q = order_points(p, q)
     start = XY(xvalues[p[1]], yvalues[p[2]])
     elements = embed_elements(start, wall.elements, dclusters, wclusters)
+    elements = sort(elements, by=(e) -> e.p)
 
     return IndexedWall(pclusters[p], pclusters[q], tclusters[wall.thickness], elements)
 end
