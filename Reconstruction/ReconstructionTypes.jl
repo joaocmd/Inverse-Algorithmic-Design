@@ -1,6 +1,24 @@
+using Statistics: mean
+
 include("Types.jl")
 
 order_points(p, q) = p < q ? (p, q) : (q, p)
+
+abstract type OrientedSymbol end
+
+struct Toilet <: OrientedSymbol
+    c::XY
+    angle::Int
+end
+
+Toilet(element) = Toilet(xy(mean(element["points"], dims=1)[1,:]), parse(Int, element["orientation"]))
+
+struct Sink <: OrientedSymbol
+    c::XY
+    angle::Int
+end
+
+Sink(element) = Sink(xy(mean(element["points"], dims=1)[1,:]), parse(Int, element["orientation"]))
 
 abstract type IndexedElement end
 

@@ -47,6 +47,16 @@ function reconstruct_element_scalars(walls;
     return tclusters[1], taverages, dclusters[1], daverages, wclusters[1], waverages
 end
 
+function reconstruct_symbol(element)
+    if element["type"] == "toilet"
+        return Toilet(element)
+    elseif element["type"] == "sink"
+        return Sink(element)
+    else
+        return element
+    end
+end
+
 function reconstruct(elements; maxpointdistance=1.0)
     xclusters, xaverages, yclusters, yaverages, pclusters, pvalues = reconstruct_wall_points(elements.walls; distancethreshold=maxpointdistance)
     tclusters, taverages, dclusters, daverages, wclusters, waverages = reconstruct_element_scalars(elements.walls)
@@ -62,6 +72,6 @@ function reconstruct(elements; maxpointdistance=1.0)
         xvalues=xaverages, yvalues=yaverages, points=pvalues,
         walls=indexedwalls,
         tvalues=taverages, dvalues=daverages, wvalues=waverages,
-        symbols=elements.symbols
+        symbols=[reconstruct_symbol(s) for s in elements.symbols]
     )
 end

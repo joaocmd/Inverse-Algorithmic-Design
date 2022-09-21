@@ -15,21 +15,21 @@ function fix_coordinates(elements, scaledetection, file;
     factor = nothing
     width, height = ImageMagick.metadata(file)[1]
 
+    factor = 1
     if scaledetection === :none
         return elements
     elseif scaledetection === :factor
         factor = scalefactor
-        adjust = (p::XY) -> XY(p.x, height - p.y) * factor
     elseif scaledetection === :width
         factor = realwidth / width
-        adjust = (p::XY) -> XY(p.x, height - p.y) * factor
     elseif scaledetection === :walls
         allthicknesses = [([w.thickness for w in elements.walls]...)...]
         tclusters = hcluster(sort(allthicknesses), nothing, 2)
         medianthickwall = median_cluster(tclusters[2])[2]
         factor = 0.3 / medianthickwall # assuming 0.3m for thick walls
-        adjust = (p::XY) -> XY(p.x, height - p.y) * factor
     end
+
+    adjust = (p::XY) -> XY(p.x, height - p.y) * factor
 
     for wall in elements.walls
         wall.p, wall.q = adjust(wall.p), adjust(wall.q)
@@ -39,8 +39,11 @@ function fix_coordinates(elements, scaledetection, file;
         end
     end
 
-    # for symbol in symbols
-    # end
+    for symbol in elements.symbols
+        symbol["points"][:,2] = height .- symbol["points"][:,2]
+        symbol["points"] *= factor
+    end
+
     return elements
 end
 

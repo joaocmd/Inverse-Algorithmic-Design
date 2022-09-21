@@ -1,9 +1,10 @@
 import Pkg
 Pkg.add(Pkg.PackageSpec(name="KhepriBase", url="https://github.com/aptmcl/KhepriBase.jl"))
+# Pkg.add(Pkg.PackageSpec(name="KhepriBlender", url="https://github.com/aptmcl/KhepriBlender.jl"))
 Pkg.add(Pkg.PackageSpec(name="KhepriAutoCAD", url="https://github.com/aptmcl/KhepriAutoCAD.jl"))
 ##
 
-using KhepriAutoCAD: xy, delete_all_shapes
+using KhepriAutoCAD: xy, xyz, delete_all_shapes, regular_prism
 include("OutAux.jl")
 
 thinwall(wallpath; parts=[]) = wall(wallpath, 0.15; parts=parts)
@@ -86,7 +87,7 @@ wall1 = thickwall([p1, p2]; parts=[window(0.27, 0.53)])
 wall2 = thickwall([p1, p5]; parts=[window(0.3, 1.36)])
 wall3 = thickwall([p2, p3]; parts=[window(0.41, 0.53)])
 wall4 = thinwall([p2, p7])
-wall5 = thickwall([p3, p4]; parts=[window(0.87, 0.53), window(3.99, 0.53)])
+wall5 = thickwall([p3, p4]; parts=[window(0.87, 0.53), mywindow(3.99, 0.53)])
 wall6 = thinwall([p3, p8])
 wall7 = thickwall([p4, p10]; parts=[window(0.3, 1.36)])
 wall8 = thinwall([p5, p6])
@@ -138,17 +139,9 @@ wall53 = thickwall([p41, p42]; parts=[door(0.43, 0.84)])
 
 ##
 
-toilet(xy(18.74, 9.54), 0)
-toilet(xy(3.09, 9.6), 180)
-sink(xy(4.26, 9.75), 180)
-sink(xy(18.12, 10.62), 270)
-sink(xy(13.93, 10.84), 270)
+namesx = [n for n = names(Main) if startswith(string(n), "x")]
+namesy = [n for n = names(Main) if startswith(string(n), "y")]
 
-##
-
-xnames = [n for n = names(Main) if occursin(r"^x\d+$", string(n))]
-ynames = [n for n = names(Main) if occursin(r"^y\d+$", string(n))]
-
-show_x_lines(xnames, ynames)
-show_y_lines(ynames, xnames)
-show_points([n for n = names(Main) if occursin(r"^p\d+$", string(n))])
+show_x_lines(namesx, namesy)
+show_y_lines(namesy, namesx)
+show_points([n for n = names(Main) if startswith(string(n), "p")])

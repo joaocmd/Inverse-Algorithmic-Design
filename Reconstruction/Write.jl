@@ -37,14 +37,13 @@ function define_points(indextovalue, xvalues, yvalues, rounddigits, generateline
     return generatelines ? define_points(indextovalue) : define_points(indextovalue, xvalues, yvalues, rounddigits)
 end
 
-# TODO: Usar um Dict como nos outros lados
-"Defines walls' symbols, such as `wall1 = MyWall([p1, p2])`."
+"Defines walls' symbols, such as `wall1 = wall([p1, p2])`."
 function define_walls(walls, tvalues, dvalues, wvalues, rounddigits, generatescalars, wallwrappers)
     get_value(val) = rounddigits === nothing ? val : round(val, digits=rounddigits)
     get_value(idx, values) = generatescalars ? idx : get_value(values[idx])
 
-    define_element(element::IndexedDoor) = :(mydoor($(get_value(element.p)), $(get_value(element.width, dvalues))))
-    define_element(element::IndexedWindow) = :(mywindow($(get_value(element.p)), $(get_value(element.width, wvalues))))
+    define_element(element::IndexedDoor) = :(door($(get_value(element.p)), $(get_value(element.width, dvalues))))
+    define_element(element::IndexedWindow) = :(window($(get_value(element.p)), $(get_value(element.width, wvalues))))
 
     function define_wall(idx, wall)
         p = Symbol(:p, wall.p)
@@ -60,9 +59,9 @@ function define_walls(walls, tvalues, dvalues, wvalues, rounddigits, generatesca
             end
         else
             if isempty(wall.elements)
-                return :($(Symbol(:wall, idx)) = mywall([$p, $q], $(get_value(wall.thickness, tvalues))))
+                return :($(Symbol(:wall, idx)) = wall([$p, $q], $(get_value(wall.thickness, tvalues))))
             else
-                return :($(Symbol(:wall, idx)) = mywall([$p, $q], $(get_value(wall.thickness, tvalues)); parts=[$(map(define_element, wall.elements)...)]))
+                return :($(Symbol(:wall, idx)) = wall([$p, $q], $(get_value(wall.thickness, tvalues)); parts=[$(map(define_element, wall.elements)...)]))
             end
         end
     end
@@ -72,12 +71,23 @@ end
 "Defines wrappers for thin and thick walls, only used when there are only two wall clusters."
 function define_wall_wrappers(thicknesses)
     function define_wrapper(thickness, name)
-        return "$(name)wall(wallpath; parts=[]) = mywall(wallpath, $thickness; parts=parts)"
+        return "$(name)wall(wallpath; parts=[]) = wall(wallpath, $thickness; parts=parts)"
     end
     return map(t -> define_wrapper(t...), zip(thicknesses, ["thin", "thick"]))
 end
 
-function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths, wwidths;
+"Defines symbols. Symbols that are not yet implemented are returned as nothing"
+function define_symbols(elements, rounddigits)
+    get_value(val) = rounddigits === nothing ? val : round(val, digits=rounddigits)
+
+    define_element(sink::Sink) = :(sink(xy($(get_value(sink.c.x)), $(get_value(sink.c.y))), $(sink.angle)))
+    define_element(toilet::Toilet) = :(toilet(xy($(get_value(toilet.c.x)), $(get_value(toilet.c.y))), $(toilet.angle)))
+    define_element(_) = nothing
+
+    return map(define_element, elements)
+end
+
+function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths, wwidths, symbols;
     rounddigits=nothing, generatelines=true, generatescalars=false, wallwrappers=true)
     # TODO: generatescalars not currently supported
     createwallwrappers = wallwrappers && length(thicknesses) == 2
@@ -85,10 +95,10 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
     open(file, "w") do io
         println(io, :(import Pkg))
         println(io, :(Pkg.add(Pkg.PackageSpec(name="KhepriBase", url="https://github.com/aptmcl/KhepriBase.jl"))))
-        println(io, :(Pkg.add(Pkg.PackageSpec(name="KhepriBlender", url="https://github.com/aptmcl/KhepriBlender.jl"))))
+        println(io, :(Pkg.add(Pkg.PackageSpec(name="KhepriAutoCAD", url="https://github.com/aptmcl/KhepriAutoCAD.jl"))))
         println(io, "##\n")
 
-        println(io, :(using KhepriBlender: xy, delete_all_shapes))
+        println(io, :(using KhepriAutoCAD: xy, delete_all_shapes))
         println(io, :(include("OutAux.jl")))
         println(io)
 
@@ -118,17 +128,22 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
 
         walls = define_walls(walls, thicknesses, dwidths, wwidths, rounddigits, generatescalars, createwallwrappers)
         foreach(wall -> println(io, wall), walls)
+
+        println(io, "\n##\n")
+        symbols = filter(!isnothing, define_symbols(symbols, rounddigits))
+        foreach(symbol -> println(io, symbol), symbols)
+        
         println(io, "\n##\n")
 
         if generatelines
-            println(io, :(namesx = [n for n in names(Main) if startswith(string(n), "x")]))
-            println(io, :(namesy = [n for n in names(Main) if startswith(string(n), "y")]))
+            println(io, :(xnames = [n for n in names(Main) if occursin(r"^x\d+$", string(n))]))
+            println(io, :(ynames = [n for n in names(Main) if occursin(r"^y\d+$", string(n))]))
             println(io)
 
-            println(io, :(show_x_lines(namesx, namesy)))
-            println(io, :(show_y_lines(namesy, namesx)))
+            println(io, :(show_x_lines(xnames, ynames)))
+            println(io, :(show_y_lines(ynames, xnames)))
         end
-        println(io, :(show_points([n for n in names(Main) if startswith(string(n), "p")])))
+        println(io, :(show_points([n for n in names(Main) if occursin(r"^p\d+$", string(n))])))
     end
 
     JuliaFormatter.format(file, JuliaFormatter.MinimalStyle())
