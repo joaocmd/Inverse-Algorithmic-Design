@@ -1,6 +1,6 @@
 # using KhepriBlender
 import KhepriAutoCAD
-using KhepriAutoCAD: with_wall_family, with_door_family, with_window_family, add_door, add_window, vxyz, xyz, xy, x, line, text, regular_prism
+using KhepriAutoCAD: with_wall_family, with_door_family, with_window_family, add_door, add_window, vxyz, xyz, xy, x, line, text, regular_prism, cylinder
 
 export toilet, sink, door, wall, window, show_points, show_x_lines, show_y_lines, DoorOrientation
 
@@ -9,8 +9,15 @@ label_height = 3.1
 text_height = 0.3
 
 # objects
-toilet(loc, angle) = regular_prism(edges=3, angle=deg2rad(90 + angle), cb=loc, h=0.5, r=0.4, inscribed=true)
-sink(loc, angle) = regular_prism(edges=3, angle=deg2rad(90 + angle), cb=loc, h=1.2, r=0.5, inscribed=true)
+function toilet(loc, angle)
+    regular_prism(edges=5, angle=deg2rad(90 + angle), cb=xyz(loc.x, loc.y, 0), h=0.3, r=0.2, inscribed=true, material=KhepriAutoCAD.material_clay)
+    regular_prism(edges=3, angle=deg2rad(90 + angle), cb=xyz(loc.x, loc.y, 0.3), h=0.2, r=0.4, inscribed=true, material=KhepriAutoCAD.material_clay)
+end
+
+function sink(loc, angle)
+    cylinder(cb=xyz(loc.x, loc.y, 0), h=0.95, r=0.15, material=KhepriAutoCAD.material_clay)
+    regular_prism(edges=5, angle=deg2rad(90 + angle), cb=xyz(loc.x, loc.y, 1), h=0.25, r=0.5, inscribed=true, material=KhepriAutoCAD.material_clay)
+end
 
 # left forward, right forward, left reverse, right reverse
 @enum DoorOrientation lf rf lr rr
