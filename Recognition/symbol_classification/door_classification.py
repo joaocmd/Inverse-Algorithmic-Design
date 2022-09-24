@@ -14,7 +14,7 @@ def get_wall_direction(wall, p):
         TODO: generalize to functions.
     '''
     return  normalized(vector(wall['points']))
-    
+
 def crop_door(door, wall, img, padding=15):
     centroid = center(door['points'])
     width = np.linalg.norm(vector(door['points']))
@@ -41,11 +41,17 @@ def classify_door(door, wall, original_img):
         wall: the corresponding wall
         original_img: original image pixels
     '''
+    # classes = (
+    #     'slide', 'rollup', 'none',
+    #     'double_d', 'double_u',
+    #     'opposite_ul_dl', 'opposite_ul_dr', 'opposite_ur_dl', 'opposite_ur_dr',
+    #     'single_dl', 'single_dr', 'single_ul', 'single_ur',
+    # )
     classes = (
-        'slide', 'rollup', 'none',
-        'double_d', 'double_u',
-        'opposite_ul_dl', 'opposite_ul_dr', 'opposite_ur_dl', 'opposite_ur_dr',
-        'single_dl', 'single_dr', 'single_ul', 'single_ur',
+        'none', 'slide', 'rollup',
+        'double_r', 'double_f',
+        'opposite_lf_lr', 'opposite_lf_rr', 'opposite_rf_lr', 'opposite_rf_rr',
+        'single_lr', 'single_rr', 'single_lf', 'single_rf',
     )
 
     model = Model.get(checkpoints_path/'doors.pth', 40, classes)

@@ -8,7 +8,6 @@ from segmentation import predict
 
 import logging
 from tqdm import tqdm
-import numpy as np
 
 def recognize(image, verbose):
     logger = logging.getLogger(__name__)
