@@ -106,6 +106,7 @@ def show_results(image, results, output_name, segmentation=None):
                     reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (57, 160, 237), 3)
                 else:
                     reconstr = cv2.line(reconstr, np.intp(s), np.intp(e), (229, 178, 93), 3)
+                    reconstr = cv2.drawContours(reconstr, [np.intp(el['bounding_box'])], 0, (229, 178, 93), 1)
 
     symbols = ('closet', 'toilet', 'sink', 'bathtub')
     colors = ((158, 107, 26), (133, 218, 255),  (58, 126, 156), (201, 30, 173))
@@ -145,8 +146,17 @@ def classify_wall_elements(walls, image, verbose):
         if 'elements' in wall:
             for element in wall['elements']:
                 if element['type'] == 'door':
-                    element['orientation'] = classify_door(element, wall, image)
+                    label, bb = classify_door(element, wall, image)
+                    element['orientation'] = label
+                    element['bounding_box'] = bb
     return walls
+
+def remove_door_bounding_boxes(walls):
+    for wall in walls:
+        if 'elements' in wall:
+            for element in wall['elements']:
+                if element['type'] == 'door':
+                    del element['bounding_box']
 
 def calculate_wall_widths(walls, image, verbose):
     '''
@@ -221,6 +231,8 @@ def main(path, method, verbose=False, save_results=False):
         path = path.split('.')
         show_results(original, res, f'{path[0]}_{method}.{path[1]}', segmentation)
 
+    # the bounding box is only extracted for visualization purposes
+    remove_door_bounding_boxes(walls)
     return res
 
 

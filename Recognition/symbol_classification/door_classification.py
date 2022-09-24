@@ -15,7 +15,7 @@ def get_wall_direction(wall, p):
     '''
     return  normalized(vector(wall['points']))
 
-def crop_door(door, wall, img, padding=15):
+def crop_door(door, wall, img, padding=10):
     centroid = center(door['points'])
     width = np.linalg.norm(vector(door['points']))
 
@@ -29,7 +29,13 @@ def crop_door(door, wall, img, padding=15):
 
     rotated = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]), cv2.INTER_CUBIC, borderMode = cv2.BORDER_CONSTANT, borderValue=[1, 1, 1])
     cropped = cv2.getRectSubPix(rotated, np.int0(np.array([width+2*padding, 2*(width+padding)])), (width/2+padding, padding+width))
-    return cropped
+
+    bottom_left = centroid - v*(width/2 + padding) - n*(width + padding)
+    top_left  =  bottom_left + n*(width*2 + 2*padding)
+    top_right = top_left + v*(width + 2*padding)
+    bottom_right = top_right - n*(width*2 + 2*padding)
+
+    return cropped, np.array([bottom_left, top_left, top_right, bottom_right])
 
 def classify_door(door, wall, original_img):
     '''
@@ -55,5 +61,5 @@ def classify_door(door, wall, original_img):
     )
 
     model = Model.get(checkpoints_path/'doors.pth', 40, classes)
-    cropped_door = crop_door(door, wall, original_img)
-    return model.predict(cropped_door)
+    cropped_door, bb = crop_door(door, wall, original_img)
+    return model.predict(cropped_door), bb
