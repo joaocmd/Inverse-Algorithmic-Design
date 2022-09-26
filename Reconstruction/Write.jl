@@ -132,7 +132,7 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
         println(io, "\n##\n")
         symbols = filter(!isnothing, define_symbols(symbols, rounddigits))
         foreach(symbol -> println(io, symbol), symbols)
-        
+
         println(io, "\n##\n")
 
         if generatelines
