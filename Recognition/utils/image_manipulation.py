@@ -6,6 +6,7 @@ from utils.geometry import distance, vector
 def pixels_to_bb(pixels):
     cnts, _ = cv2.findContours(pixels, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     rectangles = (cv2.minAreaRect(cnt) for cnt in cnts)
+    rectangles = filter(lambda r: r[1][0]*r[1][1] > 15, rectangles)
     return tuple(cv2.boxPoints(rect) for rect in rectangles)
 
 

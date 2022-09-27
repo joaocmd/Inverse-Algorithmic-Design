@@ -201,20 +201,20 @@ def main(path, method, verbose=False, save_results=False):
 
     if method == 'residential':
         from residential import recognize
-        prediction, segmentation = recognize(original, verbose)
+        prediction = recognize(original, verbose)
     elif method == 'brute_force':
         from brute_force import recognize
-        prediction, segmentation = recognize(original, verbose)
+        prediction = recognize(original, verbose)
     elif method == 'r2v':
         from raster_to_vector import recognize
         prediction = recognize(path, verbose)
 
-    walls, doors, windows = prediction['walls'], prediction['doors'], prediction['windows']
+    walls, doors, windows, = prediction['walls'], prediction['doors'], prediction['windows']
 
     # attach and calculate widths first because normalization might move walls
     walls = attach_openings(walls, doors + windows, verbose)
     if method != 'r2v':
-        walls = calculate_wall_widths(walls, segmentation, verbose)
+        walls = calculate_wall_widths(walls, prediction['segmentation']['walls'], verbose)
 
     walls = normalize_wall_points(walls, 5)
 
@@ -229,7 +229,7 @@ def main(path, method, verbose=False, save_results=False):
 
     if save_results:
         path = path.split('.')
-        show_results(original, res, f'{path[0]}_{method}.{path[1]}', segmentation)
+        show_results(original, res, f'{path[0]}_{method}.{path[1]}', prediction['segmentation']['walls'])
 
     # the bounding box is only extracted for visualization purposes
     remove_door_bounding_boxes(walls)

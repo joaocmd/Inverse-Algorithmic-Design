@@ -16,7 +16,7 @@ def wall_to_poly(wall, width):
     p2 = p1 + v
     p3 = p2 - p*width
     p4 = p3 - v
-    
+
     return np.array([p1, p2, p3, p4])
 
 def fitness(wall, wall_pixels, width):
@@ -24,7 +24,6 @@ def fitness(wall, wall_pixels, width):
     rect = wall_to_poly(wall, width)
     new_image = np.int0(cv2.fillConvexPoly(new_image, points = np.array(rect, dtype=np.int32), color = 255))//255
 
-   
     i = np.sum(new_image & wall_pixels)
     total = np.sum(new_image)
     ratio = i/total
@@ -46,7 +45,7 @@ def get_junctions(heatmaps, wall_pixels, junction_threshold):
         cX = int(boundRect[0] + 0.5 * boundRect[2])
         cY = int(boundRect[1] + 0.5 * boundRect[3])
         centroids.append((cX, cY))
-    
+
     return centroids
 
 def normalize_points(all_points, distance_threshold):
@@ -109,7 +108,7 @@ def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=
 
     for i in range(len(points)-1):
         c1, o1 = points[i], originals[i]
-        
+
         c2, o2 = points[i+1], originals[i+1]
         angle = angle_between(c2 - c1, np.array([1, 0]))
         if abs(angle - 90) < 5: # check if vertical

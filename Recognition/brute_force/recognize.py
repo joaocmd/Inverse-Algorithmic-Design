@@ -44,4 +44,7 @@ def recognize(image, verbose):
     bathtubs = tuple({'points': p, 'type': 'bathtub'} for p in pixels_to_bb(bathtubs_pixels))
 
     logger.info('Finished')
-    return {'walls': walls, 'doors': doors, 'windows': windows, 'symbols': (*closets, *toilets, *sinks, *bathtubs)}, walls_closed
+    return {
+                'walls': walls, 'doors': doors, 'windows': windows, 'symbols': (*closets, *toilets, *sinks, *bathtubs),
+                'segmentation': { 'walls': walls_closed, 'icons': icons_pred, 'heatmaps': heatmaps[:13].max(axis=0) }
+        }
