@@ -7,13 +7,16 @@ from segmentation import predict
 
 import logging
 from tqdm import tqdm
+import time
 
 def recognize(image, verbose):
     logger = logging.getLogger(__name__)
     if verbose: logger.setLevel(logging.DEBUG)
 
     logger.info('Performing segmentation')
+    start = time.perf_counter()
     rooms_pred, icons_pred, heatmaps = predict(image)
+    segmentation_time = time.perf_counter() - start
     # Structural elements
     walls_closed = as_image(rooms_pred == 2)
     doors_pixels = as_image(icons_pred ==  2)
@@ -27,6 +30,7 @@ def recognize(image, verbose):
 
     ## Vectorization and adding semantics
     logger.info('Extracting walls')
+    start = time.perf_counter()
     walls = get_walls(heatmaps, walls_closed)
     walls = tuple({'points': w} for w in tqdm(walls, disable=not verbose))
 
@@ -43,8 +47,11 @@ def recognize(image, verbose):
     sinks = tuple({'points': p, 'type': 'sink'} for p in pixels_to_bb(sinks_pixels))
     bathtubs = tuple({'points': p, 'type': 'bathtub'} for p in pixels_to_bb(bathtubs_pixels))
 
+    vectorization_time = time.perf_counter() - start
+
     logger.info('Finished')
     return {
                 'walls': walls, 'doors': doors, 'windows': windows, 'symbols': (*closets, *toilets, *sinks, *bathtubs),
-                'segmentation': { 'walls': walls_closed, 'icons': icons_pred, 'heatmaps': heatmaps[:13].max(axis=0) }
+                'segmentation': { 'walls': walls_closed, 'icons': icons_pred, 'heatmaps': heatmaps[:13].max(axis=0) },
+                'times': { 'segmentation': segmentation_time, 'vectorization': vectorization_time}
         }
