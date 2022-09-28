@@ -52,6 +52,8 @@ function reconstruct_symbol(element)
         return Toilet(element)
     elseif element["type"] == "sink"
         return Sink(element)
+    elseif element["type"] == "closet"
+        return Closet(element)
     else
         return element
     end

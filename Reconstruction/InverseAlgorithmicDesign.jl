@@ -31,13 +31,13 @@ function main(file;
     )
 end
 
-# main("/mnt/c/Users/joaodavid/Desktop/practical/Recognition/original.png",
-#     maxpointdistance=0.3,
-#     scaledetection=:walls,
-#     rounddigits=2,
-#     generatescalars=false,
-#     wallwrappers=true,
-#     generatelines=true)
+main("/mnt/c/Users/joaodavid/Desktop/practical/Recognition/original.png",
+    maxpointdistance=0.3,
+    scaledetection=:walls,
+    rounddigits=2,
+    generatescalars=false,
+    wallwrappers=true,
+    generatelines=true)
 
 if abspath(PROGRAM_FILE) == @__FILE__
     opts = ArgParseSettings()

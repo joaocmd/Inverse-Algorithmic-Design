@@ -4,6 +4,14 @@ include("Types.jl")
 
 order_points(p, q) = p < q ? (p, q) : (q, p)
 
+abstract type BoxSymbol end
+
+struct Closet <: BoxSymbol
+    q::XY
+    p::XY
+end
+Closet(element) = Closet(xy(element["points"][1,:]), xy(element["points"][3,:]))
+
 abstract type OrientedSymbol end
 
 struct Toilet <: OrientedSymbol

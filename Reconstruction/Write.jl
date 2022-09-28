@@ -82,6 +82,7 @@ function define_symbols(elements, rounddigits)
 
     define_element(sink::Sink) = :(sink(xy($(get_value(sink.c.x)), $(get_value(sink.c.y))), $(sink.angle)))
     define_element(toilet::Toilet) = :(toilet(xy($(get_value(toilet.c.x)), $(get_value(toilet.c.y))), $(toilet.angle)))
+    define_element(closet::Closet) = :(closet(xy($(get_value(closet.p.x)), $(get_value(closet.p.y))), xy($(get_value(closet.q.x)), $(get_value(closet.q.y)))))
     define_element(_) = nothing
 
     return map(define_element, elements)
