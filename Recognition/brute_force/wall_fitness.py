@@ -10,6 +10,10 @@ def wall_to_poly(wall, width):
     """Generates the vertices to a given wall with two endpoints and a width."""
     v = wall[1] - wall[0]
     p = np.array([v[1], -v[0]])
+
+    if np.linalg.norm(p) == 0:
+        return None
+
     p = p / np.linalg.norm(p)
 
     p1 = wall[0] + p*(width/2)
@@ -22,6 +26,9 @@ def wall_to_poly(wall, width):
 def fitness(wall, wall_pixels, width):
     new_image = np.zeros(wall_pixels.shape)
     rect = wall_to_poly(wall, width)
+    if rect is None:
+        return 0
+
     new_image = np.int0(cv2.fillConvexPoly(new_image, points = np.array(rect, dtype=np.int32), color = 255))//255
 
     i = np.sum(new_image & wall_pixels)
@@ -32,6 +39,9 @@ def fitness(wall, wall_pixels, width):
 def warp_fitness(wall, wall_pixels, width):
     length = np.linalg.norm(wall[1] - wall[0])
     rect = wall_to_poly(wall, width)
+    if rect is None:
+        return 0
+
     src = np.float32(rect[:3,:])
     dest = np.float32([[0, 0], [length, 0], [length, width]])
     M = cv2.getAffineTransform(src, dest)

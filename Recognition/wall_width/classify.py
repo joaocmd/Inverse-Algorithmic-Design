@@ -8,21 +8,26 @@ def wall_to_poly(wall, width):
     """
     v = wall[1] - wall[0]
     p = np.array([v[1], -v[0]])
+    if np.linalg.norm(p) == 0:
+        return None
     p = p / np.linalg.norm(p)
-    
+
     p1 = wall[0] + p*(width/2)
     p2 = p1 + v
     p3 = p2 - p*width
     p4 = p3 - v
-    
+
     return np.array([p1, p2, p3, p4])
 
 
 def wall_width_iou(wall, wall_pixels, width):
     new_image = np.zeros(wall_pixels.shape)
     rect = wall_to_poly(wall, width)
+    if rect is None:
+        return 0
+
     new_image = np.int0(cv2.fillConvexPoly(new_image, points = np.array(rect, dtype=np.int32), color = 255))//255
-    
+
     # crop to RoI
     x, y, w, h = cv2.boundingRect(np.array(wall_to_poly(wall, 100), dtype=np.int32))
     new_image = new_image[y:y+h, x:x+w]
@@ -35,8 +40,11 @@ def wall_width_iou(wall, wall_pixels, width):
 def wall_fitness(wall, wall_pixels, width):
     new_image = np.zeros(wall_pixels.shape)
     rect = wall_to_poly(wall['points'], width)
+    if rect is None:
+        return -np.NINF
+
     new_image = np.int0(cv2.fillConvexPoly(new_image, points = np.array(rect, dtype=np.int32), color = 255))//255
-    
+
 
     i = np.sum(new_image & wall_pixels)
     neg = ~wall_pixels + 2
