@@ -134,12 +134,12 @@ def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=
 
         c2, o2 = points[i+1], originals[i+1]
         angle = angle_between(c2 - c1, np.array([1, 0]))
-        if abs(angle - 90) < 5: # check if vertical
+        if not np.array_equal(c1, c2) and abs(angle - 90) < 5: # check if vertical
             if try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
                 walls.append((c1, c2))
 
         # find next that is horizontal
-        c2 = [c2 for c2 in zip(points[i+1:], originals[i+1:]) if c1[1] == c2[0][1]]
+        c2 = [x for x in zip(points[i+1:], originals[i+1:]) if not np.array_equal(c1, x[0]) and c1[1] == x[0][1]]
         if c2 != []:
             c2, o2 = c2[0]
             if try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
@@ -147,6 +147,9 @@ def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=
 
         for j in range(i+1, len(points)):
             c2, o2 = points[j], originals[j]
+            if np.array_equal(c1, c2): # points on the same cluster are ignored
+                continue
+
             if try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
                 walls.append((c1, c2))
 
