@@ -27,8 +27,8 @@ def crop_door(door, wall, img, padding=10):
     dst = np.array([[padding, padding+width], [padding+width, padding+width], [width/2+padding, padding+width+1]]) # t is on unit vector
     M = cv2.getAffineTransform(np.float32(np.array([s, e, t])), np.float32(dst))
 
-    rotated = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]), cv2.INTER_CUBIC, borderMode = cv2.BORDER_CONSTANT, borderValue=[1, 1, 1])
-    cropped = cv2.getRectSubPix(rotated, np.int0(np.array([width+2*padding, 2*(width+padding)])), (width/2+padding, padding+width))
+    rotated = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]), cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=[1, 1, 1])
+    cropped = cv2.getRectSubPix(rotated, np.int0([width+2*padding, 2*(width+padding)]), (width/2+padding, padding+width))
 
     bottom_left = centroid - v*(width/2 + padding) - n*(width + padding)
     top_left  =  bottom_left + n*(width*2 + 2*padding)
@@ -56,7 +56,7 @@ def classify_door(door, wall, original_img):
     classes = (
         'none', 'slide', 'rollup',
         'double_r', 'double_f',
-        'opposite_lf_lr', 'opposite_lf_rr', 'opposite_rf_lr', 'opposite_rf_rr',
+        'opposite_ll', 'opposite_lr', 'opposite_rl', 'opposite_rr',
         'single_lr', 'single_rr', 'single_lf', 'single_rf',
     )
 

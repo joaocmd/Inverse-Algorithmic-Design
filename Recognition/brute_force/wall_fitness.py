@@ -29,6 +29,18 @@ def fitness(wall, wall_pixels, width):
     ratio = i/total
     return ratio
 
+def warp_fitness(wall, wall_pixels, width):
+    length = np.linalg.norm(wall[1] - wall[0])
+    rect = wall_to_poly(wall, width)
+    src = np.float32(rect[:3,:])
+    dest = np.float32([[0, 0], [length, 0], [length, width]])
+    M = cv2.getAffineTransform(src, dest)
+    new_img = cv2.warpAffine(wall_pixels, M, (wall_pixels.shape[1], wall_pixels.shape[0]), cv2.INTER_NEAREST)
+    new_img = cv2.getRectSubPix(new_img, np.intp([length, width]), (length//2, width//2))
+
+    n_horizontal_pixels = np.sum(np.sum(new_img, axis=0) > 0)
+    return n_horizontal_pixels/new_img.shape[1]
+
 def get_junctions(heatmaps, wall_pixels, junction_threshold):
     wall_heatmaps = heatmaps[:13]
     junctions = wall_heatmaps.sum(axis=0) * wall_pixels
@@ -86,9 +98,10 @@ def try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
     # does not make sense
     angles_tried[tuple(c1)].add(angle)
 
-    inter_threshold = 0.5
+    inter_threshold = 0.75
     # inter = loss(np.array((o1, o2)), wallPixels, 7, verbose_threshold=inter_threshold)
-    inter = fitness(np.array((o1, o2)), wall_pixels, 7)
+    # inter = fitness(np.array((o1, o2)), wall_pixels, 7)
+    inter = warp_fitness(np.array((o1, o2)), wall_pixels, 7)
     if inter > inter_threshold:
         # Do not allow a wall going back the same direction (might happen if its further on the x axis)
         angles_put[tuple(c1)].add(angle)
