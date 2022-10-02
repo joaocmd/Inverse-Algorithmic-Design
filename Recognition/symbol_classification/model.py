@@ -34,7 +34,7 @@ class Model():
     def get(cls, checkpoint, img_size, classes):
         if checkpoint not in cls.models:
             cls.models[checkpoint] = cls(checkpoint, img_size, classes)
-        
+
         return cls.models[checkpoint]
 
     def predict(self, img):

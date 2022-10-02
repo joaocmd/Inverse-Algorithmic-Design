@@ -97,11 +97,13 @@ def normalize_points(all_points, distance_threshold):
 
 def try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
     angle = angle_between(c2 - c1, np.array([1, 0]))
+    other_angle = angle_between(c1 - c2, np.array([1, 0]))
     if any(angle_diff(a, angle) < 5 for a in angles_tried[tuple(c1)]): # do not points that go over tried junctios
         return False
 
     # 70 yields best results for the primary school floor plan, but it's hammered in
-    if any(angle_diff(a, angle) < 70 for a in angles_put[tuple(c1)]): # do not add overlapping walls
+    if (any(angle_diff(a, angle) < 70 for a in angles_put[tuple(c1)])
+        or any(angle_diff(a, other_angle) < 70 for a in angles_put[tuple(c2)])): # do not add overlapping walls
         return False
 
     # We add this one immediatly because if not we could place a wall over two junction points, which
@@ -115,13 +117,19 @@ def try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
     if inter > inter_threshold:
         # Do not allow a wall going back the same direction (might happen if its further on the x axis)
         angles_put[tuple(c1)].add(angle)
-        angles_put[tuple(c2)].add(angle_between(c1 - c2, np.array([1, 0])))
+        angles_put[tuple(c2)].add(other_angle)
 
         return True
     return False
 
 def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=5):
     junctions = get_junctions(heatmaps, wall_pixels//255, junction_threshold)
+    # junctions = get_junctions_cubi(heatmaps, wall_pixels//255, junction_threshold, int(np.sqrt(2*distance_threshold**2)))
+
+    # An alternative can be implemented where instead of following the ordered junctions
+    # which requires normalizing the points, an initial step starts by checking the distances
+    # between all points. Then, the points which are closest together are tried
+    # untill all pairs have been tried. angles_tried and angles_put would be used likewise.
     originals, points = normalize_points(junctions, distance_threshold)
 
     walls = []
@@ -154,3 +162,58 @@ def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=
                 walls.append((c1, c2))
 
     return tuple(np.array(w).astype(np.float32) for w in walls)
+
+# Adapted from CubiCasa5K:
+
+def get_junctions_cubi(heatmaps, wall_pixels, junction_threshold, gap):
+    wall_heatmaps = heatmaps[:13]
+    junctions = wall_heatmaps.sum(axis=0) * wall_pixels
+
+    extracted = extract_local_max(junctions, junction_threshold,
+        close_point_suppression=True, gap=gap)
+
+    return extracted
+
+def extract_local_max(mask_img, heatmap_value_threshold,
+                      close_point_suppression=False, gap=10):
+    mask = mask_img.copy()
+    height, width = mask.shape
+    points = []
+
+    while True:
+        index = np.argmax(mask)
+        y, x = np.unravel_index(index, mask.shape)
+        max_value = mask[y, x]
+        if max_value <= heatmap_value_threshold:
+            return points
+
+        points.append(np.intp([x, y]))
+
+        maximum_suppression_iterative(mask, x, y, heatmap_value_threshold)
+        if close_point_suppression:
+            mask[max(y - gap, 0):min(y + gap, height - 1),
+                 max(x - gap, 0):min(x + gap, width - 1)] = -1
+
+def maximum_suppression_iterative(mask, x, y, heatmap_value_threshold):
+    height, width = mask.shape
+
+    stack = [(x, y)]
+    deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    while len(stack) != 0:
+        x, y = stack.pop(0)
+        value = mask[y][x]
+        if value == -1:
+            continue
+        mask[y][x] = -1
+
+        for delta in deltas:
+            neighbor_x = x + delta[0]
+            neighbor_y = y + delta[1]
+            if neighbor_x < 0 or neighbor_y < 0 or neighbor_x >= width or neighbor_y >= height:
+                continue
+
+            neighbor_value = mask[neighbor_y][neighbor_x]
+
+            if neighbor_value <= value and neighbor_value > heatmap_value_threshold:
+                stack.append((neighbor_x, neighbor_y))

@@ -35,12 +35,12 @@ def get_room_contours_from_walls(wall_img, kernel_size=(3, 3)):
     wall_cnts, _ = cv2.findContours(skeleton, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     return tuple(c.reshape(c.shape[0], 2).astype(np.float32) for c in wall_cnts)#HACK: [:-1]
 
-def get_opening_lines(opening_img, kernel_sie=(3, 3), size_threshold=10):
+def get_opening_bb(opening_img, kernel_size=(2, 2), size_threshold=10):
     '''
         Receives the segmented opening pixels (doors or windows) and returns
-        their contourns. Performs dilations to avoid wrongful connections.
+        their contours. Performs dilations to avoid wrongful connections.
     '''
-    eroded = cv2.erode(opening_img, np.ones(kernel_sie))
+    eroded = cv2.erode(opening_img, np.ones(kernel_size))
     cnts, _ = cv2.findContours(eroded, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     rectangles = (cv2.minAreaRect(cnt) for cnt in cnts)
     boxes = (cv2.boxPoints(rect) for rect in rectangles)

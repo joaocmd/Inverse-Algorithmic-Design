@@ -32,13 +32,13 @@ def recognize(image, verbose):
     logger.info('Extracting walls')
     start = time.perf_counter()
     walls = get_walls(heatmaps, walls_closed)
-    walls = tuple({'points': w} for w in tqdm(walls, disable=not verbose))
+    walls = tuple({'points': w} for w in walls)
 
     logger.info('Identifying wall openings and associating them with their respective walls')
-    doors = get_opening_lines(doors_pixels)
+    doors = get_opening_bb(doors_pixels)
     doors = tuple({'points': d, 'type': 'door'} for d in doors)
 
-    windows = get_opening_lines(windows_pixels)
+    windows = get_opening_bb(windows_pixels)
     windows = tuple({'points': w, 'type': 'window'} for w in windows)
 
     logger.info('Retrieving symbols')

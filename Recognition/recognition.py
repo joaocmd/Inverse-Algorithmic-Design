@@ -13,8 +13,6 @@ import uuid
 # TODO
 #   ideias:
 #       * find which room is connected to each wall and define rooms as functions (repeated walls are ignored and kept in a global state)
-#       * find most common door width and declare as a state variable so that it can be hidden in the function call of most walls
-#           (probably useful for other cases such as door length, etc.)
 
 class HashableDict:
     def __init__(self, value):
@@ -238,5 +236,6 @@ def main(path, method, verbose=False, save_results=False):
 
 if __name__ == '__main__':
     # print(main('original.png', 'residential', verbose=True))
-    print(main('original.png', 'brute_force', verbose=True, save_results=True))
+    # print(main('original.png', 'brute_force', verbose=True, save_results=True))
     # print(main('r2v-image-rotated.jpg', 'r2v', verbose=True))
+    main('original.png', 'brute_force', verbose=True, save_results=False)

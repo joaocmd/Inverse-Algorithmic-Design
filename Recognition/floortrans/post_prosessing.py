@@ -15,9 +15,9 @@ def get_wall_polygon(wall_heatmaps, room_segmentation, threshold, wall_classes, 
     wall_lines, wall_points, wall_point_orientation_lines_map = get_wall_lines(wall_heatmaps, room_segmentation, threshold, wall_classes, point_orientations, orientation_ranges)
 
     walls = np.empty([0, 4, 2], int)
-    types = [] 
+    types = []
     wall_lines_new = []
-    
+
     for indx, i in enumerate(wall_lines):
         res = extract_wall_polygon(i, wall_points, room_segmentation, wall_classes)
         if res is not None:
@@ -145,18 +145,18 @@ def fix_wall_corners(walls, wall_points, wall_lines):
         for j, line in enumerate(wall_lines):
             p1, p2, wall_type = line
             dim = calc_line_dim(wall_points, line)
-            
+
             if dim == 0:
                 # horizontal
                 if p1 == i:
                     right = walls[j], j
-                elif p2 == i: 
+                elif p2 == i:
                     left = walls[j], j
             else:
                 # vertical
                 if p1 == i:
                     down = walls[j], j
-                elif p2 == i: 
+                elif p2 == i:
                     up = walls[j], j
 
         # expand right wall to left
@@ -172,7 +172,7 @@ def fix_wall_corners(walls, wall_points, wall_lines):
 
             walls[right[1], 0, 0] = new_x
             walls[right[1], 3, 0] = new_x
-        
+
         # expand left to right
         if left and (down or up):
             x1 = 0
@@ -337,7 +337,7 @@ def merge_rectangles(rectangles, room_types):
 #                     room_polygons.append(numpy_pol)
                     room_polygons.append(pol)
                     new_room_types.append(pol_type)
-                    
+
             else:
 #                 x, y = polygon_union.boundary.coords.xy
 #                 numpy_pol = np.array([np.array(x), np.array(y)]).T
@@ -379,7 +379,7 @@ def get_polygons(predictions, threshold, all_opening_types):
     for i in range(c):
         if i in [2, 8]: # we ignore walls (2) and railings (8)
             room_seg[i] = np.zeros((h, w))
-  
+
     room_seg_2D = np.argmax(room_seg, axis=0)
     room_types = []
     grid_polygons_new = []
@@ -421,7 +421,7 @@ def get_junction_points(wall_points, wall_lines):
         junction_points = np.append(junction_points, [p1], axis=0)
         p2 = np.array(wall_points[indx2][:2])
         junction_points = np.append(junction_points, [p2], axis=0)
-    
+
     if len(junction_points) > 0:
         junction_points = np.unique(junction_points, axis=0)
 
@@ -443,7 +443,7 @@ def get_opening_polygon(heatmaps, wall_polygons, icons_seg, wall_points, wall_li
 
     point_info = calc_point_info(door_points, gap, point_orientations, orientation_ranges, height, width, True)
     door_lines, door_point_orientation_lines_map, door_point_neighbors = point_info
-    
+
     label_votes_map = np.zeros(icons_seg.shape)
     label_map = np.zeros((30, height, width))
     for segment_index, segmentation_img in enumerate(icons_seg):
@@ -547,7 +547,7 @@ def get_opening_types(opening_polygons, icons_seg, all_opening_classes):
         y_2 = max(pol[:, 1])
         x_1 = min(pol[:, 0])
         x_2 = max(pol[:, 0])
-        
+
         opening_evidence_sums = icons_seg[all_opening_classes, y_1:y_2+1, x_1:x_2+1].sum(axis=(1, 2))
         opening_class = np.argmax(opening_evidence_sums)
         # if opening_class in all_opening_types:
@@ -580,7 +580,7 @@ def get_icon_polygon(heatmaps, icons_seg, threshold, point_orientations, orienta
         point_2 = icon_points[icon[1]]
         point_3 = icon_points[icon[2]]
         point_4 = icon_points[icon[3]]
-        
+
         x1 = int((point_1[0] + point_3[0]) / 2)
         x2 = int((point_2[0] + point_4[0]) / 2)
         y1 = int((point_1[1] + point_2[1]) / 2)
@@ -617,10 +617,10 @@ def get_connected_walls(walls):
                 i += 1
 
         connected_walls.append(wall_inx)
-        
+
     return connected_walls
 
-    
+
 def points_to_manhantan(connected_walls, wall_points, line_dim):
     new_wall_points = copy.deepcopy(wall_points)
     for walls in connected_walls:
@@ -756,7 +756,7 @@ def point_inside_polygon(p, polygon):
     if (x >= polygon[0, 0] and x >= polygon[3, 0] and x <= polygon[1, 0] and x <= polygon[2, 0] and
        y >= polygon[0, 1] and y >= polygon[1, 1] and y <= polygon[2, 1] and y <= polygon[3, 1]):
         return True
-    
+
     return False
 
 
@@ -921,7 +921,7 @@ def extract_wall_polygon(wall, wall_points, segmentation, seg_class):
                             up_right,
                             down_right,
                             down_left])
-        
+
         polygon[:, 0] = np.clip(polygon[:, 0], 0, max_width)
         polygon[:, 1] = np.clip(polygon[:, 1], 0, max_height)
 
@@ -1009,7 +1009,7 @@ def get_icon_area(icon, icon_points):
     point_2 = icon_points[icon[1]]
     point_3 = icon_points[icon[2]]
     point_4 = icon_points[icon[3]]
-    
+
     x_1 = int((point_1[0] + point_3[0]) / 2)
     x_2 = int((point_2[0] + point_4[0]) / 2)
     y_1 = int((point_1[1] + point_2[1]) / 2)
@@ -1097,7 +1097,7 @@ def maximum_suppression(mask, x, y, heatmap_value_threshold):
         continue
 
 
-def calc_point_info(points, gap, point_orientations, orientation_ranges, 
+def calc_point_info(points, gap, point_orientations, orientation_ranges,
                     height, width, min_distance_only=False,
                     double_direction=False):
     lines = []
