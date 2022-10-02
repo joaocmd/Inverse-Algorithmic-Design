@@ -1,6 +1,6 @@
 # using KhepriBlender
 import KhepriAutoCAD
-using KhepriAutoCAD: with_wall_family, with_door_family, with_window_family, add_door, add_window, vxyz, xyz, xy, x, line, text, regular_prism, cylinder, box
+using KhepriAutoCAD: with_wall_family, with, default_level_to_level_height, with_door_family, with_window_family, add_door, add_window, vxyz, xyz, xy, x, line, text, regular_prism, cylinder, box
 
 export toilet, sink, closet, door, wall, window, show_points, show_x_lines, show_y_lines, DoorOrientation
 
@@ -19,7 +19,10 @@ function sink(loc, angle)
     regular_prism(edges=5, angle=deg2rad(90 + angle), cb=xyz(loc.x, loc.y, 1), h=0.25, r=0.5, inscribed=true, material=KhepriAutoCAD.material_clay)
 end
 
-closet(p, q) = box(p, xyz(q.x, q.y, 1.2), material=KhepriAutoCAD.material_wood)
+# closet(p, q) = box(p, xyz(q.x, q.y, 1.2), material=KhepriAutoCAD.material_wood)
+# closet(p, q) = box(p, xyz(q.x, q.y, 1.2), material=KhepriAutoCAD.material_wood)
+
+closet(p, q) = box(p, q.x-p.x, q.y-p.y, 1.2, material=KhepriAutoCAD.material_wood)
 
 # left forward, right forward, left reverse, right reverse
 @enum DoorOrientation lf rf lr rr
@@ -41,7 +44,6 @@ end
 window(p, width) = Window(p, width)
 
 function wall(wallpath, thickness=0.2; parts=[])
-
     with_wall_family(thickness=thickness) do
         w = KhepriAutoCAD.wall(wallpath)
 
@@ -58,6 +60,12 @@ function wall(wallpath, thickness=0.2; parts=[])
         end
         return w
     end
+end
+
+function railing(railingpath, thickness=0.1)
+    KhepriAutoCAD.sweep(
+        KhepriAutoCAD.polygonal_path(railingpath),
+        KhepriAutoCAD.region(KhepriAutoCAD.bottom_aligned_rectangular_profile(thickness, 1.2)))
 end
 
 function show_points(names)

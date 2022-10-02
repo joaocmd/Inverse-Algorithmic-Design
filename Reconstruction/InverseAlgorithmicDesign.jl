@@ -23,6 +23,7 @@ function main(file;
     write_plan(out,
         elements.xvalues, elements.yvalues, elements.points,
         elements.walls, elements.tvalues, elements.dvalues, elements.wvalues,
+        elements.railings, elements.railingthickness,
         elements.symbols;
         rounddigits=rounddigits,
         generatescalars=generatescalars,

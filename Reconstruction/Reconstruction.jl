@@ -4,8 +4,8 @@ include("Types.jl")
 include("ReconstructionTypes.jl")
 include("Clustering.jl")
 
-function reconstruct_wall_points(walls; distancethreshold=1.0)
-    allpoints = [([[w.p, w.q] for w in walls]...)...]
+function reconstruct_wall_points(walls, railings; distancethreshold=1.0)
+    allpoints = [([[w.p, w.q] for w in [walls..., railings...]]...)...]
     allx = map(p -> p.x, allpoints)
     ally = map(p -> p.y, allpoints)
 
@@ -22,15 +22,17 @@ function reconstruct_wall_points(walls; distancethreshold=1.0)
     return xclusters[1], xaverages, yclusters[1], yaverages, pclusters[1], pclusters[2]
 end
 
-function reconstruct_element_scalars(walls;
+function reconstruct_element_scalars(walls, railings;
     thicknessthreshold=nothing,
     thicknessclusters=2,
     widththreshold=0.1,
     widthclusters=nothing
 )
-    allthicknesses = [([w.thickness for w in walls]...)...]
+    allthicknesses = [w.thickness for w in walls]
     tclusters = hcluster(sort(allthicknesses), thicknessthreshold, thicknessclusters)
     taverages = median_cluster(tclusters[2])
+
+    railingthickness = length(railings) > 0 ? Statistics.mean([r.thickness for r in railings]) : nothing
 
     wallelements = [([w.elements for w in walls]...)...]
 
@@ -44,7 +46,7 @@ function reconstruct_element_scalars(walls;
     wclusters = hcluster(sort(windowwidths), widththreshold, widthclusters)
     waverages = median_cluster(wclusters[2])
 
-    return tclusters[1], taverages, dclusters[1], daverages, wclusters[1], waverages
+    return tclusters[1], taverages, dclusters[1], daverages, wclusters[1], waverages, railingthickness
 end
 
 function reconstruct_symbol(element)
@@ -60,8 +62,8 @@ function reconstruct_symbol(element)
 end
 
 function reconstruct(elements; maxpointdistance=1.0)
-    xclusters, xaverages, yclusters, yaverages, pclusters, pvalues = reconstruct_wall_points(elements.walls; distancethreshold=maxpointdistance)
-    tclusters, taverages, dclusters, daverages, wclusters, waverages = reconstruct_element_scalars(elements.walls)
+    xclusters, xaverages, yclusters, yaverages, pclusters, pvalues = reconstruct_wall_points(elements.walls, elements.railings; distancethreshold=maxpointdistance)
+    tclusters, taverages, dclusters, daverages, wclusters, waverages, railingthickness = reconstruct_element_scalars(elements.walls, elements.railings)
 
     indexedwalls = [
         IndexedWall(w,
@@ -70,10 +72,16 @@ function reconstruct(elements; maxpointdistance=1.0)
         for w in elements.walls
     ]
 
+    indexedrailings = [
+        IndexedRailing(r, xclusters, yclusters, pclusters) for r in elements.railings
+    ]
+
     return (
         xvalues=xaverages, yvalues=yaverages, points=pvalues,
         walls=indexedwalls,
+        railings=indexedrailings,
         tvalues=taverages, dvalues=daverages, wvalues=waverages,
+        railingthickness=railingthickness,
         symbols=[reconstruct_symbol(s) for s in elements.symbols]
     )
 end

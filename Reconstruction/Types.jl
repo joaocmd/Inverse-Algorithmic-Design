@@ -131,3 +131,16 @@ end
 
 Base.isless(w1::Wall, w2::Wall)::Bool = w1.p < w2.p || (w1.p == w2.p && w1.q < w2.q)
 
+mutable struct Railing
+    p::XY
+    q::XY
+    thickness::Float64
+end
+
+function Railing(railing::Dict{Any,Any})
+    points, thickness = railing["points"], railing["width"]
+    p, q = xy(points[1, :]), xy(points[2, :])
+    return Railing(p, q, thickness)
+end
+
+Base.isless(r1::Railing, r2::Railing)::Bool = r1.p < r2.p || (r1.p == r2.p && r1.q < r2.q)

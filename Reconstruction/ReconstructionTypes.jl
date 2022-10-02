@@ -61,6 +61,19 @@ function IndexedWall(wall, xclusters, xvalues, yclusters, yvalues, pclusters,
     return IndexedWall(pclusters[p], pclusters[q], tclusters[wall.thickness], elements)
 end
 
+struct IndexedRailing
+    p::Index
+    q::Index
+end
+Base.isless(r1::IndexedRailing, r2::IndexedRailing) = (r1.p, r1.q) < (r2.p, r2.q)
+
+function IndexedRailing(railing, xclusters, yclusters, pclusters)
+    p, q = adjust_to_clusters(railing.p, railing.q, xclusters, yclusters)
+    p, q = order_points(p, q)
+
+    return IndexedRailing(pclusters[p], pclusters[q])
+end
+
 function adjust_to_clusters(p, q, xclusters, yclusters)
     p = (xclusters[p.x], yclusters[p.y])
     q = (xclusters[q.x], yclusters[q.y])

@@ -207,7 +207,7 @@ def main(path, method, verbose=False, save_results=False):
         from raster_to_vector import recognize
         prediction = recognize(path, verbose)
 
-    walls, railings, doors, windows, = prediction['walls'], walls['railings'], prediction['doors'], prediction['windows']
+    walls, railings, doors, windows, = prediction['walls'], prediction['railings'], prediction['doors'], prediction['windows']
 
     # attach and calculate widths first because normalization might move walls
     walls = attach_openings(walls, doors + windows, verbose)
@@ -215,8 +215,9 @@ def main(path, method, verbose=False, save_results=False):
         walls = calculate_wall_widths(walls, prediction['segmentation']['walls'], verbose)
         railings = calculate_wall_widths(railings, prediction['segmentation']['railings'], verbose)
 
-    walls = normalize_wall_points(walls, 5)
-    # railings = normalize_wall_points(walls, 5)
+    all_structural = walls+railings
+    walls = normalize_wall_points(walls, all_structural, 5)
+    railings = normalize_wall_points(railings, all_structural, 5)
 
     # this step can be merged with attach, probably not relevant
     walls = classify_wall_elements(walls, original, verbose)
@@ -224,7 +225,7 @@ def main(path, method, verbose=False, save_results=False):
     # predicting toilet and sinks rotation
     symbols = classify_symbols(prediction['symbols'], original, verbose)
 
-    logger.info('Finished')
+    logger.info('Finished recognition')
     res = {'walls': walls, 'railings': railings, 'symbols': symbols}
 
     if save_results:
@@ -232,6 +233,7 @@ def main(path, method, verbose=False, save_results=False):
         show_results(original, res, f'{path[0]}_{method}.{path[1]}', prediction['segmentation']['walls'])
 
     # the bounding box is only extracted for visualization purposes
+    logger.info('Cleaning up return value')
     remove_door_bounding_boxes(walls)
     return res
 

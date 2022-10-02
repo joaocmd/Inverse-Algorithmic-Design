@@ -52,26 +52,40 @@ function define_walls(walls, tvalues, dvalues, wvalues, rounddigits, generatesca
         if wallwrappers
             fname = wall.thickness == 1 ? :thinwall : :thickwall
             if isempty(wall.elements)
-                return :($(Symbol(:wall, idx)) = $fname([$p, $q]))
+                return :($fname([$p, $q]))
             else
-                # TODO: elements = sort(wall.element, ke)
-                return :($(Symbol(:wall, idx)) = $fname([$p, $q]; parts=[$(map(define_element, wall.elements)...)]))
+                return :($fname([$p, $q]; parts=[$(map(define_element, wall.elements)...)]))
             end
         else
             if isempty(wall.elements)
-                return :($(Symbol(:wall, idx)) = wall([$p, $q], $(get_value(wall.thickness, tvalues))))
+                return :(wall([$p, $q], $(get_value(wall.thickness, tvalues))))
             else
-                return :($(Symbol(:wall, idx)) = wall([$p, $q], $(get_value(wall.thickness, tvalues)); parts=[$(map(define_element, wall.elements)...)]))
+                return :(wall([$p, $q], $(get_value(wall.thickness, tvalues)); parts=[$(map(define_element, wall.elements)...)]))
             end
         end
     end
     return [define_wall(idx, wall) for (idx, wall) in enumerate(sort(walls))]
 end
 
+"Defines railings' symbols, such as `railing([p1, p2])`."
+function define_railings(railings, thickness, rounddigits)
+    get_value(val) = rounddigits === nothing ? val : round(val, digits=rounddigits)
+
+    function define_railing(railing)
+        p = Symbol(:p, railing.p)
+        q = Symbol(:p, railing.q)
+
+        return :(railing([$p, $q], $(get_value(thickness))))
+    end
+    return [define_railing(railing) for railing in sort(railings)]
+end
+
 "Defines wrappers for thin and thick walls, only used when there are only two wall clusters."
-function define_wall_wrappers(thicknesses)
+function define_wall_wrappers(thicknesses, rounddigits)
+    get_value(val) = rounddigits === nothing ? val : round(val, digits=rounddigits)
+
     function define_wrapper(thickness, name)
-        return "$(name)wall(wallpath; parts=[]) = wall(wallpath, $thickness; parts=parts)"
+        return "$(name)wall(wallpath; parts=[]) = wall(wallpath, $(get_value(thickness)); parts=parts)"
     end
     return map(t -> define_wrapper(t...), zip(thicknesses, ["thin", "thick"]))
 end
@@ -88,7 +102,7 @@ function define_symbols(elements, rounddigits)
     return map(define_element, elements)
 end
 
-function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths, wwidths, symbols;
+function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths, wwidths, railings, railingthickness, symbols;
     rounddigits=nothing, generatelines=true, generatescalars=false, wallwrappers=true)
     # TODO: generatescalars not currently supported
     createwallwrappers = wallwrappers && length(thicknesses) == 2
@@ -104,7 +118,7 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
         println(io)
 
         if createwallwrappers
-            for wrapper in define_wall_wrappers(sort([values(thicknesses)...]))
+            for wrapper in define_wall_wrappers(sort([values(thicknesses)...]), rounddigits)
                 println(io, wrapper)
             end
             println(io)
@@ -129,6 +143,10 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
 
         walls = define_walls(walls, thicknesses, dwidths, wwidths, rounddigits, generatescalars, createwallwrappers)
         foreach(wall -> println(io, wall), walls)
+        println(io)
+
+        railings = define_railings(railings, railingthickness, rounddigits)
+        foreach(railing -> println(io, railing), railings)
 
         println(io, "\n##\n")
         symbols = filter(!isnothing, define_symbols(symbols, rounddigits))

@@ -28,7 +28,6 @@ function fix_coordinates(elements, scaledetection, file;
         medianthickwall = median_cluster(tclusters[2])[2]
         factor = 0.3 / medianthickwall # assuming 0.3m for thick walls
     end
-
     adjust = (p::XY) -> XY(p.x, height - p.y) * factor
 
     for wall in elements.walls
@@ -37,6 +36,10 @@ function fix_coordinates(elements, scaledetection, file;
         for el in wall.elements
             el.p, el.q = adjust(el.p), adjust(el.q)
         end
+    end
+    for railing in elements.railings
+        railing.p, railing.q = adjust(railing.p), adjust(railing.q)
+        railing.thickness *= factor
     end
 
     for symbol in elements.symbols
@@ -82,6 +85,7 @@ function recognize(file, scaledetection; forceinstall=false)
     # results = fixcoordinates(results_raw)
     results = (
         walls=[Wall(w) for w in results_raw["walls"]],
+        railings=[Railing(r) for r in results_raw["railings"]],
         symbols=results_raw["symbols"]
     )
 
