@@ -19,6 +19,7 @@ def recognize(image, verbose):
     segmentation_time = time.perf_counter() - start
     # Structural elements
     walls_closed = as_image(rooms_pred == 2)
+    railing_pixels = as_image(rooms_pred == 8)
     doors_pixels = as_image(icons_pred ==  2)
     windows_pixels = as_image(icons_pred ==  1)
 
@@ -31,8 +32,11 @@ def recognize(image, verbose):
     ## Vectorization and adding semantics
     logger.info('Extracting walls')
     start = time.perf_counter()
-    walls = get_walls(heatmaps, walls_closed)
+    walls = get_walls(heatmaps, walls_closed, multiply_maps=True)
     walls = tuple({'points': w} for w in walls)
+
+    railings = get_walls(heatmaps, railing_pixels, multiply_maps=False)
+    railings = tuple({'points': r} for r in railings)
 
     logger.info('Identifying wall openings and associating them with their respective walls')
     doors = get_opening_bb(doors_pixels)
@@ -51,7 +55,7 @@ def recognize(image, verbose):
 
     logger.info('Finished')
     return {
-                'walls': walls, 'doors': doors, 'windows': windows, 'symbols': (*closets, *toilets, *sinks, *bathtubs),
-                'segmentation': { 'walls': walls_closed, 'icons': icons_pred, 'heatmaps': heatmaps[:13].max(axis=0) },
+                'walls': walls, 'railings': railings, 'doors': doors, 'windows': windows, 'symbols': (*closets, *toilets, *sinks, *bathtubs),
+                'segmentation': { 'rooms': rooms_pred, 'icons': icons_pred, 'walls': walls_closed, 'railings': railing_pixels, 'heatmaps': heatmaps[:13].max(axis=0) },
                 'times': { 'segmentation': segmentation_time, 'vectorization': vectorization_time}
         }

@@ -51,9 +51,12 @@ def warp_fitness(wall, wall_pixels, width):
     n_horizontal_pixels = np.sum(np.sum(new_img, axis=0) > 0)
     return n_horizontal_pixels/new_img.shape[1]
 
-def get_junctions(heatmaps, wall_pixels, junction_threshold):
+def get_junctions(heatmaps, wall_pixels, junction_threshold, multiply_maps):
     wall_heatmaps = heatmaps[:13]
-    junctions = wall_heatmaps.sum(axis=0) * wall_pixels
+    junctions = wall_heatmaps.sum(axis=0)
+    if multiply_maps:
+        junctions *= wall_pixels
+
     junctions = np.where(junctions > junction_threshold, 1, 0)
 
     contours, _ = cv2.findContours(junctions.astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -122,8 +125,8 @@ def try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
         return True
     return False
 
-def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=5):
-    junctions = get_junctions(heatmaps, wall_pixels//255, junction_threshold)
+def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=5, multiply_maps=False):
+    junctions = get_junctions(heatmaps, wall_pixels//255, junction_threshold, multiply_maps)
     # junctions = get_junctions_cubi(heatmaps, wall_pixels//255, junction_threshold, int(np.sqrt(2*distance_threshold**2)))
 
     # An alternative can be implemented where instead of following the ordered junctions

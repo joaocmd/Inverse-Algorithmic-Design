@@ -19,10 +19,10 @@ def mean_cluster(clusters):
 
     return averagestoindex, indextoaverages
 
-def normalize_wall_points(walls, distance_threshold=10):
+def normalize_wall_points(walls, all_elements, distance_threshold=10):
     walls = [w.copy() for w in walls]
-    allx = [w['points'][0][0]  for w in walls] + [w['points'][1][0] for w in walls]
-    ally = [w['points'][0][1]  for w in walls] + [w['points'][1][1] for w in walls]
+    allx = [w['points'][0][0]  for w in all_elements] + [w['points'][1][0] for w in all_elements]
+    ally = [w['points'][0][1]  for w in all_elements] + [w['points'][1][1] for w in all_elements]
 
     xclusters = hcluster(allx, distance_threshold)
     xaverages = mean_cluster(xclusters[1])
@@ -43,4 +43,4 @@ def normalize_wall_points(walls, distance_threshold=10):
         points = sorted(((p1x, p1y), (p2x, p2y)), key=lambda x: (x[0], -x[1]))
         w['points'] = np.array(points)
 
-    return walls
+    return tuple(walls)
