@@ -19,7 +19,7 @@ function sink(loc, angle)
     regular_prism(edges=5, angle=deg2rad(90 + angle), cb=xyz(loc.x, loc.y, 1), h=0.25, r=0.5, inscribed=true, material=KhepriAutoCAD.material_clay)
 end
 
-closet(p, q) = box(p, xyz(q.x, q.y, 1.2))
+closet(p, q) = box(p, xyz(q.x, q.y, 1.2), material=KhepriAutoCAD.material_wood)
 
 # left forward, right forward, left reverse, right reverse
 @enum DoorOrientation lf rf lr rr
