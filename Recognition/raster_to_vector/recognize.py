@@ -43,4 +43,4 @@ def recognize(image, verbose):
     doors = tuple({'points': np.array(d), 'type': 'door'}  for d in results['doors'])
     doors = transform_points(image, doors)
 
-    return {'walls': walls, 'doors': doors, 'windows': (), 'icons': results['icons']}
+    return {'walls': walls, 'doors': doors, 'windows': (), 'symbols': results['icons']}

@@ -20,17 +20,18 @@ checkpoint = torch.load(checkpoint_path)
 
 model.load_state_dict(checkpoint['model_state'])
 model.eval()
+model.cuda()
 
 def predict(image):
-    rot = RotateNTurns()    
+    rot = RotateNTurns()
 
     image = torch.from_numpy(np.moveaxis(image, 2, 0).reshape(1, 3, image.shape[0], image.shape[1]))
-    image = ((image / 255) * 2 - 1).float()
+    image = ((image / 255) * 2 - 1).float().cuda()
 
     with torch.no_grad():
         height = image.shape[2]
         width = image.shape[3]
-        
+
         rotations = [(0, 0), (1, -1), (2, 2), (-1, 1)]
         pred_count = len(rotations)
         prediction = torch.zeros([pred_count, n_classes, height, width])

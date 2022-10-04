@@ -5,7 +5,7 @@ def parse_args():
     Parse input arguments
     """
     parser = argparse.ArgumentParser(description='PlaneFlow')
-    
+
     parser.add_argument('--task', dest='task',
                         help='task type: [train, test, predict]',
                         default='train', type=str)
@@ -62,7 +62,7 @@ def parse_args():
                         default=0, type=int)
     parser.add_argument('--numOutputClasses', dest='numOutputClasses',
                         help='the number of output classes',
-                        default=0, type=int)    
+                        default=0, type=int)
     parser.add_argument('--width', dest='width',
                         help='input width',
                         default=256, type=int)
@@ -78,10 +78,10 @@ def parse_args():
     ## Flags
     parser.add_argument('--visualizeMode', dest='visualizeMode',
                         help='visualization mode',
-                        default='', type=str)    
+                        default='', type=str)
     parser.add_argument('--suffix', dest='suffix',
                         help='suffix to distinguish experiments',
-                        default='', type=str)    
-    
-    args = parser.parse_args()
+                        default='', type=str)
+
+    args, unknown = parser.parse_known_args()
     return args
