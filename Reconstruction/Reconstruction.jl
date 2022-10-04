@@ -71,10 +71,12 @@ function reconstruct(elements; maxpointdistance=1.0)
             tclusters, dclusters, wclusters)
         for w in elements.walls
     ]
+    filter!(w -> w.p != w.q, indexedwalls)
 
     indexedrailings = [
         IndexedRailing(r, xclusters, yclusters, pclusters) for r in elements.railings
     ]
+    filter!(r -> r.p != r.q, indexedrailings)
 
     return (
         xvalues=xaverages, yvalues=yaverages, points=pvalues,

@@ -1,8 +1,30 @@
 # using KhepriBlender
 import KhepriAutoCAD
-using KhepriAutoCAD: with_wall_family, with, default_level_to_level_height, with_door_family, with_window_family, add_door, add_window, vxyz, xyz, xy, x, line, text, regular_prism, cylinder, box
+using KhepriAutoCAD:
+    with_wall_family,
+    with,
+    default_level_to_level_height,
+    with_door_family,
+    with_window_family,
+    add_door,
+    add_window,
+    vxyz,
+    xyz,
+    xy,
+    x,
+    line,
+    text,
+    regular_prism,
+    cylinder,
+    box,
+    sweep,
+    polygonal_path,
+    path_length,
+    region,
+    bottom_aligned_rectangular_profile,
+    curtain_wall
 
-export toilet, sink, closet, door, wall, window, show_points, show_x_lines, show_y_lines, DoorOrientation
+export toilet, sink, closet, door, wall, window, show_points, show_x_lines, show_y_lines, DoorOrientation, curtain_wall
 
 line_padding = 0.3
 label_height = 3.1
@@ -46,15 +68,19 @@ window(p, width) = Window(p, width)
 function wall(wallpath, thickness=0.2; parts=[])
     with_wall_family(thickness=thickness) do
         w = KhepriAutoCAD.wall(wallpath)
+        walllength = path_length(polygonal_path(wallpath))
 
         for part = parts
+            width = part.width > 0 ? part.width : walllength - part.p + part.width
+            start = part.p >= 0 ? part.p : walllength + part.p
+
             if part isa Window
-                with_window_family(width=part.width) do
-                    add_window(w, xy(part.p, 1))
+                with_window_family(width=width) do
+                    add_window(w, xy(start, 1))
                 end
             elseif part isa Door
-                with_door_family(width=part.width) do
-                    add_door(w, x(part.p))
+                with_door_family(width=width) do
+                    add_door(w, x(start))
                 end
             end
         end
@@ -63,9 +89,10 @@ function wall(wallpath, thickness=0.2; parts=[])
 end
 
 function railing(railingpath, thickness=0.1)
-    KhepriAutoCAD.sweep(
-        KhepriAutoCAD.polygonal_path(railingpath),
-        KhepriAutoCAD.region(KhepriAutoCAD.bottom_aligned_rectangular_profile(thickness, 1.2)))
+    sweep(
+        polygonal_path(railingpath),
+        region(bottom_aligned_rectangular_profile(thickness, 1.2))
+    )
 end
 
 function show_points(names)
@@ -83,24 +110,28 @@ function show_x_lines(names)
     end
 end
 
-function show_x_lines(xnames, ynames)
+function show_x_lines(xnames, ynames; labels_only=false)
     yvalues = [eval(:(Main.$name)) for name = ynames]
     m, M = min(yvalues...), max(yvalues...)
 
     for name = xnames
         x = eval(:(Main.$name))
-        line(xyz(x, m - line_padding, label_height), xyz(x, M + line_padding, label_height))
+        if !labels_only
+            line(xyz(x, m - line_padding, label_height), xyz(x, M + line_padding, label_height))
+        end
         text(string(name), xyz(x, m - line_padding - 1, label_height), text_height)
     end
 end
 
-function show_y_lines(ynames, xnames)
+function show_y_lines(ynames, xnames; labels_only=false)
     xvalues = [eval(:(Main.$name)) for name = xnames]
     m, M = min(xvalues...), max(xvalues...)
 
     for name = ynames
         y = eval(:(Main.$name))
-        line(xyz(m - line_padding, y, label_height), xyz(M + line_padding, y, label_height))
+        if !labels_only
+            line(xyz(m - line_padding, y, label_height), xyz(M + line_padding, y, label_height))
+        end
         text(string(name), xyz(m - line_padding - 1, y, label_height), text_height)
     end
 end

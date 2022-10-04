@@ -159,8 +159,8 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
             println(io, :(ynames = [n for n in names(Main) if occursin(r"^y\d+$", string(n))]))
             println(io)
 
-            println(io, :(show_x_lines(xnames, ynames)))
-            println(io, :(show_y_lines(ynames, xnames)))
+            println(io, :(show_x_lines(xnames, ynames; labels_only=false)))
+            println(io, :(show_y_lines(ynames, xnames; labels_only=false)))
         end
         println(io, :(show_points([n for n in names(Main) if occursin(r"^p\d+$", string(n))])))
     end

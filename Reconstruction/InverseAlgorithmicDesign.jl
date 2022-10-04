@@ -9,6 +9,7 @@ include("Write.jl")
 function main(file;
     saverecognition=nothing,
     scaledetection=:walls,
+    scaledetection_value=nothing,
     maxpointdistance=0.3,
     rounddigits=nothing,
     generatescalars=false,
@@ -16,8 +17,7 @@ function main(file;
     generatelines=true,
     out=joinpath(@__DIR__, "out.jl")
 )
-
-    results = recognize(file, scaledetection)
+    results = recognize(file, scaledetection, scaledetection_value)
     elements = reconstruct(results, maxpointdistance=maxpointdistance)
 
     write_plan(out,
@@ -32,13 +32,13 @@ function main(file;
     )
 end
 
-main("/mnt/c/Users/joaodavid/Desktop/practical/Recognition/original.png",
-    maxpointdistance=0.3,
-    scaledetection=:walls,
-    rounddigits=2,
-    generatescalars=false,
-    wallwrappers=true,
-    generatelines=true)
+# main("/mnt/c/Users/joaodavid/Desktop/practical/Recognition/original.png",
+#     maxpointdistance=0.3,
+#     scaledetection=:walls,
+#     rounddigits=2,
+#     generatescalars=false,
+#     wallwrappers=true,
+#     generatelines=true)
 
 if abspath(PROGRAM_FILE) == @__FILE__
     opts = ArgParseSettings()
@@ -51,12 +51,19 @@ if abspath(PROGRAM_FILE) == @__FILE__
             default = joinpath(@__DIR__, "out.jl")
         "--max-point-distance"
             help = "max distance to merge wall junctions"
+            arg_type = Float64
             default = 0.3
         "--scale-detection"
-            help = "method to estimate scale: [:walls, :factor, :width]"
+            help = "method to estimate scale: [:walls, :factor, :width, :none]"
+            arg_type = Symbol
             default = :walls
+        "--scale-detection-value"
+            help = "used with with the scale detection option (if :width or :factor)"
+            arg_type = Float64
+            default = nothing
         "--round-digits"
             help = "number of decimal places (or nothing)"
+            arg_type = Int64
             default = 2
         "--generate-lines"
             help = "generate line components (x and y)"
@@ -74,6 +81,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     main(args["path"],
         maxpointdistance=args["max-point-distance"],
         scaledetection=args["scale-detection"],
+        scaledetection_value=args["scale-detection-value"],
         rounddigits=args["round-digits"],
         generatelines=args["generate-lines"],
         out=args["out"],

@@ -7,10 +7,7 @@ using PyCall
 include("Types.jl")
 include("Clustering.jl")
 
-function fix_coordinates(elements, scaledetection, file;
-    scalefactor=0.1,
-    realwidth=30
-)
+function fix_coordinates(elements, scaledetection, scaledetection_value, file)
     adjust = nothing
     factor = nothing
     width, height = ImageMagick.metadata(file)[1]
@@ -19,9 +16,9 @@ function fix_coordinates(elements, scaledetection, file;
     if scaledetection === :none
         return elements
     elseif scaledetection === :factor
-        factor = scalefactor
+        factor = scaledetection_value
     elseif scaledetection === :width
-        factor = realwidth / width
+        factor = scaledetection_value / width
     elseif scaledetection === :walls
         allthicknesses = [([w.thickness for w in elements.walls]...)...]
         tclusters = hcluster(sort(allthicknesses), nothing, 2)
@@ -43,7 +40,7 @@ function fix_coordinates(elements, scaledetection, file;
     end
 
     for symbol in elements.symbols
-        symbol["points"][:,2] = height .- symbol["points"][:,2]
+        symbol["points"][:, 2] = height .- symbol["points"][:, 2]
         symbol["points"] *= factor
     end
 
@@ -60,7 +57,7 @@ function segment_from_door(door::LineSegment)
     return LineSegment(c - normal * halfwidth, c + normal * halfwidth)
 end
 
-function recognize(file, scaledetection; forceinstall=false)
+function recognize(file, scaledetection, scaledetection_value; forceinstall=false)
     recognitionpath = joinpath(@__DIR__, "../Recognition/")
 
     if !isfile(file)
@@ -89,5 +86,5 @@ function recognize(file, scaledetection; forceinstall=false)
         symbols=results_raw["symbols"]
     )
 
-    return fix_coordinates(results, scaledetection, file)
+    return fix_coordinates(results, scaledetection, scaledetection_value, file)
 end
