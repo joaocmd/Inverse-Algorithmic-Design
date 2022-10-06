@@ -1,5 +1,7 @@
 # using KhepriBlender
 import KhepriAutoCAD
+import KhepriBase
+
 using KhepriAutoCAD:
     with_wall_family,
     with,
@@ -24,7 +26,7 @@ using KhepriAutoCAD:
     bottom_aligned_rectangular_profile,
     curtain_wall
 
-export toilet, sink, closet, door, wall, window, show_points, show_x_lines, show_y_lines, DoorOrientation, curtain_wall
+export toilet, sink, closet, door, wall, window, show_points, show_x_lines, show_y_lines, DoorType, curtain_wall
 
 line_padding = 0.3
 label_height = 3.1
@@ -44,19 +46,19 @@ end
 # closet(p, q) = box(p, xyz(q.x, q.y, 1.2), material=KhepriAutoCAD.material_wood)
 # closet(p, q) = box(p, xyz(q.x, q.y, 1.2), material=KhepriAutoCAD.material_wood)
 
-closet(p, q) = box(p, q.x-p.x, q.y-p.y, 1.2, material=KhepriAutoCAD.material_wood)
+closet(p, q) = box(p, q.x - p.x, q.y - p.y, 1.2, material=KhepriAutoCAD.material_wood)
 
-# left forward, right forward, left reverse, right reverse
-@enum DoorOrientation lf rf lr rr
+# left forward, right forward, left reverse, right reverse, none
+@enum DoorType lf rf lr rr other
 
 struct Door
     p::Real
     width::Real
-    orientation::DoorOrientation
+    type::DoorType
 end
 
-door(p, width, orientation) = Door(p, width, orientation)
-door(p, width) = door(p, width, lf)
+door(p, width, type) = Door(p, width, type)
+door(p, width) = door(p, width, other)
 
 struct Window
     p::Real
@@ -64,6 +66,27 @@ struct Window
 end
 
 window(p, width) = Window(p, width)
+
+function door_to_khepri(wall, door, start)
+    if door.type == other
+        return KhepriBase.door(wall, x(start))
+    else
+        println(door.type)
+        flip_x = startswith(string(door.type), "r")
+        println(flip_x)
+        angle = KhepriBase.random_range(π / 3, π / 2)
+        println(angle)
+        if endswith(string(door.type), "r") # reverse doors
+            angle *= -1
+            println(angle)
+        end
+        if flip_x # angles are flipped
+            angle *= -1
+            println(angle)
+        end
+        return KhepriBase.door(wall, x(start), angle=angle, flip_x=flip_x)
+    end
+end
 
 function wall(wallpath, thickness=0.2; parts=[])
     with_wall_family(thickness=thickness) do
@@ -80,7 +103,7 @@ function wall(wallpath, thickness=0.2; parts=[])
                 end
             elseif part isa Door
                 with_door_family(width=width) do
-                    add_door(w, x(start))
+                    KhepriBase.add!(door_to_khepri(w, part, start))
                 end
             end
         end
@@ -91,7 +114,8 @@ end
 function railing(railingpath, thickness=0.1)
     sweep(
         polygonal_path(railingpath),
-        region(bottom_aligned_rectangular_profile(thickness, 1.2))
+        region(bottom_aligned_rectangular_profile(thickness, 1)),
+        material=KhepriBase.material_glass
     )
 end
 

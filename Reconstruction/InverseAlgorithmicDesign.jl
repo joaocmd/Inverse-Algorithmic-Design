@@ -38,7 +38,8 @@ end
 #     rounddigits=2,
 #     generatescalars=false,
 #     wallwrappers=true,
-#     generatelines=true)
+#     generatelines=true,
+#     out="./results/out-door-types.jl")
 
 if abspath(PROGRAM_FILE) == @__FILE__
     opts = ArgParseSettings()

@@ -42,8 +42,16 @@ function define_walls(walls, tvalues, dvalues, wvalues, rounddigits, generatesca
     get_value(val) = rounddigits === nothing ? val : round(val, digits=rounddigits)
     get_value(idx, values) = generatescalars ? idx : get_value(values[idx])
 
-    define_element(element::IndexedDoor) = :(door($(get_value(element.p)), $(get_value(element.width, dvalues))))
-    define_element(element::IndexedWindow) = :(window($(get_value(element.p)), $(get_value(element.width, wvalues))))
+    function define_element(door::IndexedDoor)
+        if !occursin("single", door.type)
+            return :(door($(get_value(door.p)), $(get_value(door.width, dvalues))))
+        else
+            type = Symbol(last(door.type, 2))
+            return :(door($(get_value(door.p)), $(get_value(door.width, dvalues)), $type))
+        end
+    end
+
+    define_element(window::IndexedWindow) = :(window($(get_value(window.p)), $(get_value(window.width, wvalues))))
 
     function define_wall(idx, wall)
         p = Symbol(:p, wall.p)
