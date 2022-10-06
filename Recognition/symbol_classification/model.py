@@ -27,6 +27,7 @@ class Model():
         self.model = Net(classes)
         self.model.load_state_dict(load(checkpoint))
         self.model.eval()
+        self.model.cuda()
         self.img_size = img_size
         self.classes = classes
 
@@ -40,7 +41,7 @@ class Model():
     def predict(self, img):
         img = resize_img(img, self.img_size)
         img = from_numpy(np.moveaxis(img, 2, 0).reshape(1, 3, self.img_size, self.img_size))
-        img = ((img / 255) * 2 - 1).float()
+        img = ((img / 255) * 2 - 1).float().cuda()
         with no_grad():
             prediction = self.model(img).argmax().item()
         return self.classes[prediction]
