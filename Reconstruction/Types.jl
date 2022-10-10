@@ -117,6 +117,7 @@ function Wall(wall::Dict{Any,Any})
 
     if "elements" in keys(wall)
         for el in wall["elements"]
+            # FIXME: these points might not be according to the wall's direction
             s, e = xy(el["points"][1, :]), xy(el["points"][2, :])
             if el["type"] == "window"
                 push!(processed_elements, Window(s, e))

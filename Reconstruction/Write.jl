@@ -115,13 +115,14 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
     # TODO: generatescalars not currently supported
     createwallwrappers = wallwrappers && length(thicknesses) == 2
 
+    mkpath(dirname(file))
+
     open(file, "w") do io
         println(io, :(import Pkg))
         println(io, :(Pkg.add(Pkg.PackageSpec(name="KhepriBase", url="https://github.com/aptmcl/KhepriBase.jl"))))
         println(io, :(Pkg.add(Pkg.PackageSpec(name="KhepriAutoCAD", url="https://github.com/aptmcl/KhepriAutoCAD.jl"))))
         println(io, "##\n")
 
-        println(io, :(using KhepriAutoCAD: xy, delete_all_shapes))
         println(io, :(include("OutAux.jl")))
         println(io)
 
@@ -162,15 +163,7 @@ function write_plan(file, xvalues, yvalues, points, walls, thicknesses, dwidths,
 
         println(io, "\n##\n")
 
-        if generatelines
-            println(io, :(xnames = [n for n in names(Main) if occursin(r"^x\d+$", string(n))]))
-            println(io, :(ynames = [n for n in names(Main) if occursin(r"^y\d+$", string(n))]))
-            println(io)
-
-            println(io, :(show_x_lines(xnames, ynames; labels_only=false)))
-            println(io, :(show_y_lines(ynames, xnames; labels_only=false)))
-        end
-        println(io, :(show_points([n for n in names(Main) if occursin(r"^p\d+$", string(n))])))
+        println(io, :(show_auxiliary_labels(labels_only=false)))
     end
 
     JuliaFormatter.format(file, JuliaFormatter.MinimalStyle())

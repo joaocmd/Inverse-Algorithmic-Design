@@ -3,6 +3,7 @@ import KhepriAutoCAD
 import KhepriBase
 
 using KhepriAutoCAD:
+    delete_all_shapes
     with_wall_family,
     with,
     default_level_to_level_height,
@@ -26,7 +27,7 @@ using KhepriAutoCAD:
     bottom_aligned_rectangular_profile,
     curtain_wall
 
-export toilet, sink, closet, door, wall, window, show_points, show_x_lines, show_y_lines, DoorType, curtain_wall
+export toilet, sink, closet, door, wall, window, show_points, show_x_lines, show_y_lines, DoorType, curtain_wall, xy, delete_all_shapes
 
 line_padding = 0.3
 label_height = 3.1
@@ -71,18 +72,13 @@ function door_to_khepri(wall, door, start)
     if door.type == other
         return KhepriBase.door(wall, x(start))
     else
-        println(door.type)
         flip_x = startswith(string(door.type), "r")
-        println(flip_x)
         angle = KhepriBase.random_range(π / 3, π / 2)
-        println(angle)
         if endswith(string(door.type), "r") # reverse doors
             angle *= -1
-            println(angle)
         end
         if flip_x # angles are flipped
             angle *= -1
-            println(angle)
         end
         return KhepriBase.door(wall, x(start), angle=angle, flip_x=flip_x)
     end
@@ -117,6 +113,15 @@ function railing(railingpath, thickness=0.1)
         region(bottom_aligned_rectangular_profile(thickness, 1)),
         material=KhepriBase.material_glass
     )
+end
+
+function show_auxiliary_labels(; labels_only=false)
+    xnames = [n for n = names(Main) if occursin(r"^x\d+$", string(n))]
+    ynames = [n for n = names(Main) if occursin(r"^y\d+$", string(n))]
+
+    show_x_lines(xnames, ynames; labels_only=labels_only)
+    show_y_lines(ynames, xnames; labels_only=labels_only)
+    show_points([n for n = names(Main) if occursin(r"^p\d+$", string(n))])
 end
 
 function show_points(names)

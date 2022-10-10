@@ -3,7 +3,6 @@ Pkg.add(Pkg.PackageSpec(name="KhepriBase", url="https://github.com/aptmcl/Khepri
 Pkg.add(Pkg.PackageSpec(name="KhepriAutoCAD", url="https://github.com/aptmcl/KhepriAutoCAD.jl"))
 ##
 
-using KhepriAutoCAD: xy, delete_all_shapes
 include("OutAux.jl")
 
 thinwall(wallpath; parts=[]) = wall(wallpath, 0.14; parts=parts)
