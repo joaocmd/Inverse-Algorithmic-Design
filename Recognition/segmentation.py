@@ -51,6 +51,7 @@ def predict(image):
 
         prediction = torch.mean(prediction, 0, True)
 
+    # return prediction
     rooms_pred = F.softmax(prediction[0, 21:21+12], 0).cpu().data.numpy()
     rooms_pred = np.argmax(rooms_pred, axis=0)
 
