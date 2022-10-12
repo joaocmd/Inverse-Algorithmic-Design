@@ -167,10 +167,37 @@ def try_wall(c1, c2, o1, o2, wall_pixels, angles_put, angles_tried):
 
 #     return tuple(np.array(w).astype(np.float32) for w in walls)
 
+def try_wall_new(p1, p2, wall_pixels, angles_put, angles_tried):
+    angle = angle_between(p2 - p1, np.array([1, 0]))
+    other_angle = angle_between(p1 - p2, np.array([1, 0]))
+    if any(angle_diff(a, angle) < 5 for a in angles_tried[tuple(p1)]): # do not points that go over tried junctios
+        return False
+
+    # 70 yields best results for the primary school floor plan, but it's hammered in
+    if (any(angle_diff(a, angle) < 70 for a in angles_put[tuple(p1)])
+        or any(angle_diff(a, other_angle) < 70 for a in angles_put[tuple(p2)])): # do not add overlapping walls
+        return False
+
+    # To avoid placing walls over unused junction points
+    angles_tried[tuple(p1)].add(angle)
+    angles_tried[tuple(p2)].add(angle)
+
+    inter_threshold = 0.75
+    # inter = loss(np.array((o1, o2)), wallPixels, 7, verbose_threshold=inter_threshold)
+    # inter = fitness(np.array((o1, o2)), wall_pixels, 7)
+    inter = warp_fitness(np.array((p1, p2)), wall_pixels, 7)
+    if inter > inter_threshold:
+        # Do not allow a wall going back the same direction (might happen if its further on the x axis)
+        angles_put[tuple(p1)].add(angle)
+        angles_put[tuple(p2)].add(other_angle)
+
+        return True
+    return False
+
 def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=5, multiply_maps=True):
     junctions = get_junctions(heatmaps, wall_pixels//255, junction_threshold, multiply_maps)
 
-    candidates = itertools.product(junctions, junctions)
+    candidates = itertools.product(junctions, junctions) # product instead of combinations to keep wall point order
     candidates = filter(lambda pair: (pair[0][0], -pair[0][1]) < (pair[1][0], -pair[1][1]), candidates)
     candidates = sorted(candidates, key=lambda pair: distance(pair[0], pair[1]))
     candidates = [(np.intp(pair[0]), np.intp(pair[1])) for pair in candidates]
@@ -180,7 +207,7 @@ def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=
 
     walls = []
     for p1, p2 in candidates:
-        if try_wall(p1, p2, p1, p2, wall_pixels, angles_put, angles_tried):
+        if try_wall(p1, p2, wall_pixels, angles_put, angles_tried):
             walls.append((p1, p2))
 
     return tuple(np.array(w).astype(np.float32) for w in walls)
