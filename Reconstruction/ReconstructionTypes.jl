@@ -54,6 +54,8 @@ function IndexedWall(wall, xclusters, xvalues, yclusters, yvalues, pclusters,
 
     p, q = adjust_to_clusters(wall.p, wall.q, xclusters, yclusters)
     p, q = order_points(p, q)
+    # FIXME: if p and q are swapped after sorted, the door classifcations must swapped
+    # by switching both the left/right and the forward/reverse component (e.g., lf -> rr)
     start = XY(xvalues[p[1]], yvalues[p[2]])
     elements = embed_elements(start, wall.elements, dclusters, wclusters)
     elements = sort(elements, by=(e) -> e.p)

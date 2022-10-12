@@ -63,20 +63,23 @@ end
 
 function reconstruct(elements; maxpointdistance=1.0)
     xclusters, xaverages, yclusters, yaverages, pclusters, pvalues = reconstruct_wall_points(elements.walls, elements.railings; distancethreshold=maxpointdistance)
-    tclusters, taverages, dclusters, daverages, wclusters, waverages, railingthickness = reconstruct_element_scalars(elements.walls, elements.railings)
+
+    # filter walls and railings with p != q
+    walls = filter(w -> length(unique(adjust_to_clusters(w.p, w.q, xclusters, yclusters))) == 2, elements.walls)
+    railings = filter(r -> length(unique(adjust_to_clusters(r.p, r.q, xclusters, yclusters))) == 2, elements.railings)
+
+    tclusters, taverages, dclusters, daverages, wclusters, waverages, railingthickness = reconstruct_element_scalars(walls, railings)
 
     indexedwalls = [
         IndexedWall(w,
             xclusters, xaverages, yclusters, yaverages, pclusters,
             tclusters, dclusters, wclusters)
-        for w in elements.walls
+        for w in walls
     ]
-    filter!(w -> w.p != w.q, indexedwalls)
 
     indexedrailings = [
-        IndexedRailing(r, xclusters, yclusters, pclusters) for r in elements.railings
+        IndexedRailing(r, xclusters, yclusters, pclusters) for r in railings
     ]
-    filter!(r -> r.p != r.q, indexedrailings)
 
     return (
         xvalues=xaverages, yvalues=yaverages, points=pvalues,

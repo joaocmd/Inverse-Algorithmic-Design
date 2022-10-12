@@ -23,7 +23,7 @@ function fix_coordinates(elements, scaledetection, scaledetection_value, file)
         allthicknesses = [([w.thickness for w in elements.walls]...)...]
         tclusters = hcluster(sort(allthicknesses), nothing, 2)
         medianthickwall = median_cluster(tclusters[2])[2]
-        factor = 0.3 / medianthickwall # assuming 0.3m for thick walls
+        factor = scaledetection_value / medianthickwall # assuming 0.3m for thick walls
     end
     adjust = (p::XY) -> XY(p.x, height - p.y) * factor
 

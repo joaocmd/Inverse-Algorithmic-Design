@@ -9,9 +9,9 @@ include("Write.jl")
 function main(file;
     saverecognition=nothing,
     scaledetection=:walls,
-    scaledetection_value=nothing,
+    scaledetection_value=0.35,
     maxpointdistance=0.3,
-    rounddigits=nothing,
+    rounddigits=2,
     generatescalars=false,
     wallwrappers=true,
     generatelines=true,
@@ -32,14 +32,11 @@ function main(file;
     )
 end
 
-# main("/mnt/c/Users/joaodavid/Desktop/practical/Recognition/original.png",
-#     maxpointdistance=0.3,
-#     scaledetection=:walls,
-#     rounddigits=2,
-#     generatescalars=false,
-#     wallwrappers=true,
-#     generatelines=true,
-#     out="./results/out-door-types.jl")
+for example = ["22", "123", "1191", "2014", "2504", "2530"]
+    main("../../CubiCasa5k/data/cubicasa5k/high_quality_architectural/$example/F1_original.png",
+        generatelines=true,
+        out="./results/extra_new/$example.jl")
+end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     opts = ArgParseSettings()
@@ -61,7 +58,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         "--scale-detection-value"
             help = "used with with the scale detection option (if :width or :factor)"
             arg_type = Float64
-            default = nothing
+            default = 0.35
         "--round-digits"
             help = "number of decimal places (or nothing)"
             arg_type = Int64
