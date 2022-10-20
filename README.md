@@ -11,7 +11,7 @@ The `qualitative-results.ipynb` notebook was used to generate results for the qu
 The code to generate images after the recognition process is complete on that notebook, not on `recognition.py`.
 
 [The models' checkpoints to run this component are available here](https://drive.google.com/file/d/1Q-7QlcAJ2W6pFxYvO-GZ8Pnax3MRSaUT/view?usp=sharing).
-The segmentation model `model_best_val_loss_var.pkl` is from [CubiCasa5K](https://github.com/CubiCasa/CubiCasa5k)
+The segmentation model `model_best_val_loss_var.pkl` is from [CubiCasa5K](https://github.com/CubiCasa/CubiCasa5k).
 
 ## Reconstruction
 
