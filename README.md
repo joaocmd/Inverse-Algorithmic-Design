@@ -13,6 +13,8 @@ The code to generate images after the recognition process is complete on that no
 [The models' checkpoints to run this component are available here](https://drive.google.com/file/d/1Q-7QlcAJ2W6pFxYvO-GZ8Pnax3MRSaUT/view?usp=sharing).
 The segmentation model `model_best_val_loss_var.pkl` is from [CubiCasa5K](https://github.com/CubiCasa/CubiCasa5k).
 
+The code in `Recognition/raster_to_vector` is adapted from the [raster-to-vector original repository](https://github.com/art-programmer/FloorplanTransformation).
+
 ## Reconstruction
 
 Julia program that uses [Conda.jl](https://github.com/JuliaPy/Conda.jl) to install the Python packages and calls the recognition component with [PyCall.jl](https://github.com/JuliaPy/PyCall.jl).
