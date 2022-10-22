@@ -3,7 +3,6 @@ Pkg.add(Pkg.PackageSpec(name="KhepriBase", url="https://github.com/aptmcl/Khepri
 Pkg.add(Pkg.PackageSpec(name="KhepriAutoCAD", url="https://github.com/aptmcl/KhepriAutoCAD.jl"))
 ##
 
-using KhepriAutoCAD: xy, delete_all_shapes
 include("OutAux.jl")
 
 thinwall(wallpath; parts=[]) = wall(wallpath, 0.3; parts=parts)
@@ -272,12 +271,7 @@ thickwall([p96, p97])
 railing([p38, p39], 0.15)
 railing([p57, p61], 0.15)
 
-xnames = [n for n = names(Main) if occursin(r"^x\d+$", string(n))]
-ynames = [n for n = names(Main) if occursin(r"^y\d+$", string(n))]
-
-show_x_lines(xnames, ynames; labels_only=true)
-show_y_lines(ynames, xnames; labels_only=true)
-show_points([n for n = names(Main) if occursin(r"^p\d+$", string(n))])
+show_auxiliary_labels(labels_only=true)
 
 ##
 

@@ -1,6 +1,7 @@
 # module InverseAlgorithmicDesign
 
 using ArgParse
+using BenchmarkTools
 
 include("Recognition.jl")
 include("Reconstruction.jl")
@@ -32,11 +33,13 @@ function main(file;
     )
 end
 
-for example = ["22", "123", "1191", "2014", "2504", "2530"]
-    main("../../CubiCasa5k/data/cubicasa5k/high_quality_architectural/$example/F1_original.png",
-        generatelines=true,
-        out="./results/extra_new/$example.jl")
-end
+# for example = ["22", "123", "1191", "2014", "2504", "2530"]
+#     main("../../CubiCasa5k/data/cubicasa5k/high_quality_architectural/$example/F1_original.png",
+#         generatelines=true,
+#         out="./results/extra_new/$example.jl")
+# end
+
+# @btime main("../Recognition/bahauswordpress.png", scaledetection=:width, scaledetection_value=100, generatelines=true, out="lixo.jl")
 
 if abspath(PROGRAM_FILE) == @__FILE__
     opts = ArgParseSettings()

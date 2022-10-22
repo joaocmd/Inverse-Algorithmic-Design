@@ -115,31 +115,23 @@ function railing(railingpath, thickness=0.1)
     )
 end
 
-function show_auxiliary_labels(; labels_only=false)
+function show_auxiliary_labels(; labels_only=false, text_size=0.5)
     xnames = [n for n = names(Main) if occursin(r"^x\d+$", string(n))]
     ynames = [n for n = names(Main) if occursin(r"^y\d+$", string(n))]
 
-    show_x_lines(xnames, ynames; labels_only=labels_only)
-    show_y_lines(ynames, xnames; labels_only=labels_only)
-    show_points([n for n = names(Main) if occursin(r"^p\d+$", string(n))])
+    show_x_lines(xnames, ynames, labels_only, text_size)
+    show_y_lines(ynames, xnames, labels_only, text_size)
+    show_points([n for n = names(Main) if occursin(r"^p\d+$", string(n))], text_size)
 end
 
-function show_points(names)
+function show_points(names, text_size)
     for name = names
         pos = eval(:(Main.$name))
-        text(string(name), pos + vxyz(0.1, 0.1, label_height), text_height)
+        text(string(name), pos + vxyz(0.1, 0.1, label_height), text_size)
     end
 end
 
-function show_x_lines(names)
-    for name = names
-        x = eval(:(Main.$name))
-        line(xyz(x, 0, label_height), xyz(x, 25, label_height))
-        text(string(name), xyz(x, -1, label_height), text_height)
-    end
-end
-
-function show_x_lines(xnames, ynames; labels_only=false)
+function show_x_lines(xnames, ynames, labels_only, text_size)
     yvalues = [eval(:(Main.$name)) for name = ynames]
     m, M = min(yvalues...), max(yvalues...)
 
@@ -148,11 +140,11 @@ function show_x_lines(xnames, ynames; labels_only=false)
         if !labels_only
             line(xyz(x, m - line_padding, label_height), xyz(x, M + line_padding, label_height))
         end
-        text(string(name), xyz(x, m - line_padding - 1, label_height), text_height)
+        text(string(name), xyz(x, m - line_padding - 1, label_height), text_size)
     end
 end
 
-function show_y_lines(ynames, xnames; labels_only=false)
+function show_y_lines(ynames, xnames, labels_only, text_size)
     xvalues = [eval(:(Main.$name)) for name = xnames]
     m, M = min(xvalues...), max(xvalues...)
 
@@ -161,6 +153,6 @@ function show_y_lines(ynames, xnames; labels_only=false)
         if !labels_only
             line(xyz(m - line_padding, y, label_height), xyz(M + line_padding, y, label_height))
         end
-        text(string(name), xyz(m - line_padding - 1, y, label_height), text_height)
+        text(string(name), xyz(m - line_padding - 2, y, label_height), text_size)
     end
 end

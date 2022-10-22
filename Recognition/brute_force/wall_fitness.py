@@ -180,7 +180,7 @@ def try_wall_new(p1, p2, wall_pixels, angles_put, angles_tried):
 
     # To avoid placing walls over unused junction points
     angles_tried[tuple(p1)].add(angle)
-    angles_tried[tuple(p2)].add(angle)
+    angles_tried[tuple(p2)].add(other_angle)
 
     inter_threshold = 0.75
     # inter = loss(np.array((o1, o2)), wallPixels, 7, verbose_threshold=inter_threshold)
@@ -207,62 +207,62 @@ def get_walls(heatmaps, wall_pixels, junction_threshold=0.2, distance_threshold=
 
     walls = []
     for p1, p2 in candidates:
-        if try_wall(p1, p2, wall_pixels, angles_put, angles_tried):
+        if try_wall_new(p1, p2, wall_pixels, angles_put, angles_tried):
             walls.append((p1, p2))
 
     return tuple(np.array(w).astype(np.float32) for w in walls)
 
 # Adapted from CubiCasa5K:
 
-def get_junctions_cubi(heatmaps, wall_pixels, junction_threshold, gap):
-    wall_heatmaps = heatmaps[:13]
-    junctions = wall_heatmaps.sum(axis=0) * wall_pixels
+# def get_junctions_cubi(heatmaps, wall_pixels, junction_threshold, gap):
+#     wall_heatmaps = heatmaps[:13]
+#     junctions = wall_heatmaps.sum(axis=0) * wall_pixels
 
-    extracted = extract_local_max(junctions, junction_threshold,
-        close_point_suppression=True, gap=gap)
+#     extracted = extract_local_max(junctions, junction_threshold,
+#         close_point_suppression=True, gap=gap)
 
-    return extracted
+#     return extracted
 
-def extract_local_max(mask_img, heatmap_value_threshold,
-                      close_point_suppression=False, gap=10):
-    mask = mask_img.copy()
-    height, width = mask.shape
-    points = []
+# def extract_local_max(mask_img, heatmap_value_threshold,
+#                       close_point_suppression=False, gap=10):
+#     mask = mask_img.copy()
+#     height, width = mask.shape
+#     points = []
 
-    while True:
-        index = np.argmax(mask)
-        y, x = np.unravel_index(index, mask.shape)
-        max_value = mask[y, x]
-        if max_value <= heatmap_value_threshold:
-            return points
+#     while True:
+#         index = np.argmax(mask)
+#         y, x = np.unravel_index(index, mask.shape)
+#         max_value = mask[y, x]
+#         if max_value <= heatmap_value_threshold:
+#             return points
 
-        points.append(np.intp([x, y]))
+#         points.append(np.intp([x, y]))
 
-        maximum_suppression_iterative(mask, x, y, heatmap_value_threshold)
-        if close_point_suppression:
-            mask[max(y - gap, 0):min(y + gap, height - 1),
-                 max(x - gap, 0):min(x + gap, width - 1)] = -1
+#         maximum_suppression_iterative(mask, x, y, heatmap_value_threshold)
+#         if close_point_suppression:
+#             mask[max(y - gap, 0):min(y + gap, height - 1),
+#                  max(x - gap, 0):min(x + gap, width - 1)] = -1
 
-def maximum_suppression_iterative(mask, x, y, heatmap_value_threshold):
-    height, width = mask.shape
+# def maximum_suppression_iterative(mask, x, y, heatmap_value_threshold):
+#     height, width = mask.shape
 
-    stack = [(x, y)]
-    deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+#     stack = [(x, y)]
+#     deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-    while len(stack) != 0:
-        x, y = stack.pop(0)
-        value = mask[y][x]
-        if value == -1:
-            continue
-        mask[y][x] = -1
+#     while len(stack) != 0:
+#         x, y = stack.pop(0)
+#         value = mask[y][x]
+#         if value == -1:
+#             continue
+#         mask[y][x] = -1
 
-        for delta in deltas:
-            neighbor_x = x + delta[0]
-            neighbor_y = y + delta[1]
-            if neighbor_x < 0 or neighbor_y < 0 or neighbor_x >= width or neighbor_y >= height:
-                continue
+#         for delta in deltas:
+#             neighbor_x = x + delta[0]
+#             neighbor_y = y + delta[1]
+#             if neighbor_x < 0 or neighbor_y < 0 or neighbor_x >= width or neighbor_y >= height:
+#                 continue
 
-            neighbor_value = mask[neighbor_y][neighbor_x]
+#             neighbor_value = mask[neighbor_y][neighbor_x]
 
-            if neighbor_value <= value and neighbor_value > heatmap_value_threshold:
-                stack.append((neighbor_x, neighbor_y))
+#             if neighbor_value <= value and neighbor_value > heatmap_value_threshold:
+#                 stack.append((neighbor_x, neighbor_y))
